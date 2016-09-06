@@ -1,0 +1,55 @@
+###
+# kubernetes kubelet (minion) config
+# http://kubernetes.io/docs/admin/kubelet/
+
+{%if ansible_eth1 is defined -%}
+  {%set ipv4address = ansible_eth1.ipv4.address -%}
+  {%set iface = 'ansible_eth1' -%}
+{%elif ansible_eth0 is defined -%}
+ {%set ipv4address = ansible_eth0.ipv4.address -%}
+ {%set iface = 'ansible_eth0' -%}
+{%elif ansible_ens192 is defined -%}
+ {%set ipv4address = ansible_ens192.ipv4.address -%}
+ {%set iface = 'ansible_ens192' -%}
+{%else -%}
+  {%set ipv4address = 'unknown' -%}
+  {%set iface = 'unknown' -%}
+{%endif -%}
+
+{%set url  -%}
+{%for name in groups.apiservers -%}
+  {%set facts = hostvars[name] -%}
+  {%if facts.ansible_eth1 is defined -%}
+https://{{facts.ansible_eth1.ipv4.address}}:6443,{%elif facts.ansible_eth0 is defined -%}
+https://{{facts.ansible_eth0.ipv4.address}}:6443,{%elif facts.ansible_ens192 is defined -%}
+https://{{facts.ansible_ens192.ipv4.address}}:6443,{%else -%}
+  {%endif -%}
+{%endfor -%}
+{%endset%}
+
+# The address for the info server to serve on (set to 0.0.0.0 or "" for all interfaces)
+KUBELET_ADDRESS="--address=0.0.0.0"
+
+# The port for the info server to serve on
+KUBELET_PORT="--port=10250"
+
+# You may leave this blank to use the actual hostname
+KUBELET_HOSTNAME="--hostname-override={{ipv4address}}"
+
+# location of the api-server
+KUBELET_API_SERVER="--api-servers={{url}}"
+
+{%set node_labels = "--node-labels=ansinetes=" + inventory_hostname -%}
+{%if ansible_local.vmware.moid -%}
+  {%set  node_labels = node_labels + ',vm-id=' + ansible_local.vmware.moid %}
+{%endif -%}
+
+# Add your own!
+KUBELET_ARGS="\
+--cluster-dns={{kubernetes_dns.ip}} \
+--serialize-image-pulls=false \
+--cluster-domain={{kubernetes_dns.domain}} \
+--read-only-port=0 \
+--kubeconfig=/etc/kubernetes/kubelet/config \
+{{node_labels}} \
+"

@@ -1,0 +1,56 @@
+###
+# kubernetes system config
+#
+# The following values are used to configure the kube-apiserver
+# http://kubernetes.io/docs/admin/kube-apiserver/
+
+
+{%if ansible_eth1 is defined -%}
+  {%set ipv4address = ansible_eth1.ipv4.address -%}
+  {%set iface = 'ansible_eth1' -%}
+{%elif ansible_eth0 is defined -%}
+ {%set ipv4address = ansible_eth0.ipv4.address -%}
+ {%set iface = 'ansible_eth0' -%}
+{%elif ansible_ens192 is defined -%}
+ {%set ipv4address = ansible_ens192.ipv4.address -%}
+ {%set iface = 'ansible_ens192' -%}
+{%else -%}
+  {%set ipv4address = 'unknown' -%}
+  {%set iface = 'unknown' -%}
+{%endif -%}
+
+# The address on the local server to listen to.
+KUBE_API_ADDRESS="--insecure-bind-address=127.0.0.1"
+
+# The port on the local server to listen on.
+KUBE_API_PORT="--insecure-port=8080"
+
+
+# Comma separated list of nodes in the etcd cluster
+KUBE_ETCD_SERVERS="\
+--etcd-servers=https://127.0.0.1:2379 \
+--etcd-cafile=/etc/ssl/etcd/ca.pem \
+--etcd-certfile=/etc/ssl/etcd/client.pem \
+--etcd-keyfile=/etc/ssl/etcd/client-key.pem \
+"
+
+# Address range to use for services
+KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range={{kubernetes_cluster_ip_range}}"
+
+# default admission control policies
+KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota"
+
+# Add your own!
+KUBE_API_ARGS="\
+--enable-swagger-ui \
+--apiserver-count={{groups.apiservers | length}} \
+--advertise-address={{ipv4address}} \
+--etcd-prefix={{kubernetes_etcd_prefix}} \
+--authorization-mode=ABAC \
+--service-node-port-range={{kubernetes_service_port_range}} \
+--authorization-policy-file=/etc/kubernetes/kube-apiserver/policy.jsonl \
+--tls-cert-file=/etc/kubernetes/kube-apiserver/server.pem \
+--tls-private-key-file=/etc/kubernetes/kube-apiserver/server-key.pem \
+--client-ca-file=/etc/kubernetes/ca.pem \
+--service-account-key-file=/etc/kubernetes/kube-apiserver/sa.pem \
+"

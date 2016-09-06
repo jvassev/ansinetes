@@ -1,0 +1,11 @@
+###
+# kubernetes proxy config
+# http://kubernetes.io/docs/admin/kube-proxy/
+
+# default config should be adequate
+
+# Add your own!
+KUBE_PROXY_ARGS="\
+--proxy-mode=iptables \
+--kubeconfig=/etc/kubernetes/kube-proxy/config \
+"

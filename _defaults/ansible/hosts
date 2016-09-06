@@ -1,0 +1,35 @@
+kbt-1  ansible_host=172.33.8.101
+kbt-2  ansible_host=172.33.8.102
+kbt-3  ansible_host=172.33.8.103
+kbt-4  ansible_host=172.33.8.104
+
+[coreos]
+kbt-1
+kbt-2
+kbt-3
+kbt-4
+
+[apiservers]
+kbt-2
+kbt-4
+
+[schedulers]
+kbt-1
+kbt-3
+
+[controller-managers]
+kbt-4
+kbt-3
+
+[etcd-quorum-members]
+kbt-1
+kbt-2
+kbt-3
+
+[coreos:vars]
+ansible_python_interpreter="/home/core/bin/python"
+ansible_user=core
+ansible_sudo=true
+
+[all:vars]
+ansible_ssh_private_key_file = /ansinetes/security/ansible-ssh-key

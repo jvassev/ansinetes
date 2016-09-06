@@ -1,0 +1,49 @@
+{%if ansible_eth1 is defined -%}
+  {%set ipv4address = ansible_eth1['ipv4']['address'] -%}
+  {%set iface = 'ansible_eth1' -%}
+{%elif ansible_eth0 is defined -%}
+ {%set ipv4address = ansible_eth0['ipv4']['address'] -%}
+ {%set iface = 'ansible_eth0' -%}
+{%elif ansible_ens192 is defined -%}
+ {%set ipv4address = ansible_ens192['ipv4']['address'] -%}
+ {%set iface = 'ansible_ens192' -%}
+{%else -%}
+  {%set ipv4address = 'unknown' -%}
+  {%set iface = 'unknown' -%}
+{%endif -%}
+
+{%if inventory_hostname in groups['etcd-quorum-members'] -%}
+ETCD_INITIAL_ADVERTISE_PEER_URLS="https://{{ipv4address}}:2380"
+
+ETCD_LISTEN_PEER_URLS="https://{{ipv4address}}:2380"
+
+ETCD_ADVERTISE_CLIENT_URLS="https://{{ipv4address}}:2379"
+
+ETCD_INITIAL_CLUSTER_STATE=new
+
+ETCD_HEARTBEAT_INTERVAL=200
+ETCD_ELECTION_TIMEOUT=1000
+ETCD_SNAPSHOT_COUNT=5000
+
+{%else -%}
+ETCD_PROXY=on
+{%endif -%}
+
+
+ETCD_LISTEN_CLIENT_URLS="https://127.0.0.1:2379,https://{{ipv4address}}:2379"
+
+ETCD_INITIAL_CLUSTER="{%for qm in groups['etcd-quorum-members'] -%}
+{{hostvars[qm]['ansible_machine_id']}}=https://{{hostvars[qm][iface]['ipv4']['address']}}:2380{%if not loop.last -%},{%-endif%}
+          {%-endfor%}"
+
+
+# clients
+ETCD_CA_FILE=/etc/ssl/etcd/ca.pem
+ETCD_CERT_FILE=/etc/ssl/etcd/server.pem
+ETCD_KEY_FILE=/etc/ssl/etcd/server-key.pem
+
+
+# peers
+ETCD_PEER_CA_FILE=/etc/ssl/etcd/ca.pem
+ETCD_PEER_CERT_FILE=/etc/ssl/etcd/peer.pem
+ETCD_PEER_KEY_FILE=/etc/ssl/etcd/peer-key.pem

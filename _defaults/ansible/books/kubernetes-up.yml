@@ -1,0 +1,66 @@
+---
+- name: Start kubernetes
+
+  hosts: all
+
+  tasks:
+    - name: Upload systemd unit files
+      copy:
+      args:
+        src: /etc/ansible/k8s-config/systemd/{{item}}
+        dest: /etc/systemd/system/{{item}}
+        owner: root
+      with_items:
+        - kube-apiserver.service
+        - kube-controller-manager.service
+        - kubelet.service
+        - kube-proxy.service
+        - kube-scheduler.service
+      register: systemd
+
+    - name: Reload daemon
+      command: systemctl daemon-reload
+      when: "{{systemd.changed}}"
+
+    - name: Stop all services
+      service: name={{item}} state=stopped
+      with_items:
+        - kube-apiserver.service
+        - kube-controller-manager.service
+        - kubelet.service
+        - kube-proxy.service
+        - kube-scheduler.service
+
+    - name: Start apiservers
+      service: name=kube-apiserver.service state={{item.state}} enabled={{item.enabled}}
+      with_items:
+        - state: "{%if inventory_hostname in groups['apiservers']%}started{%else%}stopped{%endif%}"
+          enabled: "{%if inventory_hostname in groups['apiservers']%}yes{%else%}no{%endif%}"
+
+    - name: Start schedulers
+      service: name=kube-scheduler.service state={{item.state}} enabled={{item.enabled}}
+      with_items:
+        - state: "{%if inventory_hostname in groups['schedulers']%}started{%else%}stopped{%endif%}"
+          enabled: "{%if inventory_hostname in groups['schedulers']%}yes{%else%}no{%endif%}"
+
+    - name: Start controller-managers
+      service: name=kube-controller-manager.service state={{item.state}} enabled={{item.enabled}}
+      with_items:
+        - state: "{%if inventory_hostname in groups['controller-managers']%}started{%else%}stopped{%endif%}"
+          enabled: "{%if inventory_hostname in groups['controller-managers']%}yes{%else%}no{%endif%}"
+
+    - name: Start kubelet and proxy
+      service: name={{item}} state=started enabled=yes
+      with_items:
+        - kubelet.service
+        - kube-proxy.service
+
+    - name: Start add-ons
+      shell: "/opt/kubernetes/bin/kubectl {{kubectl_params}} create -f /etc/kubernetes/addons/{{item}} || echo Maybe already started"
+      when: inventory_hostname == groups.apiservers[0]
+      with_items:
+        - kubernetes-dashboard.yaml
+        - skydns-rc.yaml
+        - skydns-svc.yaml
+
+

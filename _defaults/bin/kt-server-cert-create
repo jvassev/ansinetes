@@ -1,0 +1,39 @@
+#!/bin/bash
+
+readonly script_dir=$(dirname "${BASH_SOURCE[0]}")
+. ${script_dir}/util.sh
+
+cd /ansinetes/security
+
+if [ ! -f ca-key.pem ]; then
+	die "CA not initialized"
+fi
+
+mkdir -p certs || true
+
+while [[ $# -gt 1 ]]; do
+  key="$1"
+  case $key in
+    -h|--hostname)
+      ADDRESS="$2"
+      shift
+  ;;
+
+  *)
+  ;;
+  esac
+  shift
+done
+
+NAME=$1
+
+if [ -e certs/${NAME}.pem ]; then
+  log certs/${NAME} already exists, will not overwrite it
+  exit 0
+fi
+
+echo '{"CN":"'${NAME}'","hosts":[""],"key":{"algo":"rsa","size":2048}}' | \
+  cfssl gencert -config=ca-config.json -hostname="$ADDRESS" -profile=server - | \
+  cfssljson -bare certs/$NAME
+
+rm -f certs/$NAME.csr &> /dev/null

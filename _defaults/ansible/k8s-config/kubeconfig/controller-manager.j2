@@ -1,0 +1,30 @@
+{%set facts = hostvars[groups.apiservers[0]] -%}
+{%if facts.ansible_eth1 is defined -%}
+  {%set url = 'https://' + facts.ansible_eth1.ipv4.address  + ':6443' -%}
+{%elif facts.ansible_eth0 is defined -%}
+  {%set url = 'https://' + facts.ansible_eth0.ipv4.address  + ':6443' -%}
+{%elif facts.ansible_ens192 is defined -%}
+  {%set url = 'https://' + facts.ansible_ens192.ipv4.address+ ':6443' -%}
+{%else -%}
+  {%set url = 'unknown' -%}
+{%endif -%}
+
+---
+apiVersion: v1
+kind: Config
+clusters:
+  - cluster:
+      certificate-authority: /etc/kubernetes/ca.pem
+      server: {{url}}
+    name: kubernetes
+contexts:
+  - context:
+      cluster: kubernetes
+      user: controller-manager
+    name: controller-manager-to-kubernetes
+current-context: controller-manager-to-kubernetes
+users:
+  - name: controller-manager
+    user:
+      client-certificate: /etc/kubernetes/kube-controller-manager/client.pem
+      client-key: /etc/kubernetes/kube-controller-manager/client-key.pem

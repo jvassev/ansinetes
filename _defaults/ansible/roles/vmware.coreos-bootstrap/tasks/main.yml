@@ -1,0 +1,19 @@
+---
+# tasks file for sigma.coreos-bootstrap
+
+- name: Make sure a version of python exists
+  script: bootstrap.sh creates=/etc/ansible/facts.d/bootstrap.fact
+  environment: "{{bootstrap_environment}}"
+
+- name: Load bootstrap facts
+  setup: filter=ansible_local
+
+- name: Re-run bootstrap if python upgrade needed
+  script: bootstrap.sh
+  environment: "{{bootstrap_environment}}"
+  when: coreos_pypy_version != ansible_local.bootstrap.pypy.version
+  register: rebootstrap
+
+- name: Reload bootstrap facts
+  setup: filter=ansible_local
+  when: rebootstrap.changed

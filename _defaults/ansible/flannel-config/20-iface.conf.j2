@@ -1,0 +1,20 @@
+{%if ansible_eth1 is defined -%}
+  {%set ipv4address = ansible_eth1['ipv4']['address'] -%}
+  {%set iface = 'ansible_eth1' -%}
+{%elif ansible_eth0 is defined -%}
+ {%set ipv4address = ansible_eth0['ipv4']['address'] -%}
+ {%set iface = 'ansible_eth0' -%}
+{%elif ansible_ens192 is defined -%}
+ {%set ipv4address = ansible_ens192['ipv4']['address'] -%}
+ {%set iface = 'ansible_ens192' -%}
+{%else -%}
+  {%set ipv4address = 'unknown' -%}
+  {%set iface = 'unknown' -%}
+{%endif -%}
+
+[Service]
+Environment=FLANNELD_IFACE={{ipv4address}}
+Environment=FLANNELD_ETCD_ENDPOINTS=https://localhost:2379
+Environment=FLANNELD_ETCD_CAFILE=/etc/ssl/etcd/ca.pem
+Environment=FLANNELD_ETCD_CERTFILE=/etc/ssl/etcd/client.pem
+Environment=FLANNELD_ETCD_KEYFILE=/etc/ssl/etcd/client-key.pem

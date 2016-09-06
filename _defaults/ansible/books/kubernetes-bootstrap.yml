@@ -1,0 +1,252 @@
+---
+- name: Install kubernetes on all nodes
+
+  hosts: all
+
+  tasks:
+    - name: Download kubernetes binaries locally
+      get_url:
+      args:
+        url: https://github.com/kubernetes/kubernetes/releases/download/{{kubernetes_install.version}}/kubernetes.tar.gz
+        dest: /tmp/ansible/kubernetes-{{kubernetes_install.version}}.tar.gz
+        checksum: "{{kubernetes_install.sha256}}"
+      when: inventory_hostname == play_hosts[0]
+      delegate_to: localhost
+      become: False
+
+    - name: Extract binaries
+      command: /etc/ansible/books/extract-k8s.sh /tmp/ansible/kubernetes-{{kubernetes_install.version}}.tar.gz
+      args:
+        chdir: /tmp/ansible
+        creates: /tmp/ansible/k8s-bin/federation-apiserver
+      when: inventory_hostname == play_hosts[0]
+      delegate_to: localhost
+      become: False
+
+    - name: Stop services
+      service:
+      args:
+        name: "{{item}}"
+        state: stopped
+      with_items:
+        - kube-apiserver.service
+        - kube-controller-manager.service
+        - kubelet.service
+        - kube-proxy.service
+        - kube-scheduler.service
+      ignore_errors: yes
+
+    - name: Create kube user
+      user:
+      args:
+        name: kube
+        shell: /usr/sbin/nologin
+        groups: docker
+        append: yes
+        home: /var/lib/kubelet
+        system: yes
+
+    - name: Create kube user dirs
+      file:
+      args:
+        path: "{{item}}"
+        state: directory
+        owner: kube
+        mode: 0755
+      with_items:
+        - /var/run/kubernetes
+
+    - name: Create kubernetes dirs
+      file:
+      args:
+        path: "{{item}}"
+        state: directory
+        owner: root
+        mode: 0755
+      with_items:
+        - /opt/kubernetes
+        - /opt/kubernetes/bin
+        - /etc/kubernetes
+        - /etc/kubernetes/addons
+        - /etc/kubernetes/kube-apiserver
+        - /etc/kubernetes/kube-proxy
+        - /etc/kubernetes/kubelet
+        - /etc/kubernetes/kube-scheduler
+        - /etc/kubernetes/kube-controller-manager
+
+    - name: Upload kubernetes binaries
+      copy:
+      args:
+        src: /tmp/ansible/k8s-bin/{{item}}
+        dest: /opt/kubernetes/bin
+        owner: root
+        mode: 0755
+      with_items:
+        - kube-scheduler
+        - kube-proxy
+        - kubelet
+        - kubectl
+        - kube-controller-manager
+        - kube-apiserver
+
+    - name: Upload jsonl policy
+      copy:
+      args:
+        src: /etc/ansible/k8s-config/policy.jsonl
+        dest: /etc/kubernetes/kube-apiserver/policy.jsonl
+
+    - name: Upload systemd unit files
+      copy:
+      args:
+        src: /etc/ansible/k8s-config/systemd/{{item}}
+        dest: /etc/systemd/system/{{item}}
+        owner: root
+      with_items:
+        - kube-apiserver.service
+        - kube-controller-manager.service
+        - kubelet.service
+        - kube-proxy.service
+        - kube-scheduler.service
+
+    - name: Create apiserver certificates for every node
+      command: "kt-server-cert-create -h {{kubernetes_apiserver_ip}},localhost,127.0.0.1,{%for a in ansible_all_ipv4_addresses%}{{a}}{%if not loop.last%},{%endif%}{%endfor%} {{inventory_hostname}}-kube-apiserver-server"
+      delegate_to: localhost
+      args:
+        creates: /ansinetes/security/certs/{{inventory_hostname}}-kube-apiserver-server.pem
+      become: False
+
+    - name: Upload ca file
+      copy:
+      args:
+        src: /ansinetes/security/ca.pem
+        dest: /etc/kubernetes/ca.pem
+
+    - name: Upload apiserver certificates
+      copy:
+      args:
+        src: "/ansinetes/security/certs/{{item.src}}"
+        dest: /etc/kubernetes/kube-apiserver/{{item.dest}}
+        owner: root
+      with_items:
+        - src: "{{inventory_hostname}}-kube-apiserver-server.pem"
+          dest: server.pem
+        - src: "{{inventory_hostname}}-kube-apiserver-server-key.pem"
+          dest: server-key.pem
+
+    - name: Create client certificates
+      command: "kt-client-cert-create {{item}}"
+      delegate_to: localhost
+      args:
+        creates: /ansinetes/security/certs/{{item}}.pem
+      become: False
+      when: inventory_hostname == play_hosts[0]
+      with_items:
+        - proxy
+        - admin
+        - scheduler
+        - controller-manager
+        - kubelet
+
+    - name: Upload kube-proxy client certificates
+      copy:
+      args:
+        src: /ansinetes/security/certs/{{item.src}}
+        dest: /etc/kubernetes/kube-proxy/{{item.dest}}
+      with_items:
+        - src: proxy.pem
+          dest: client.pem
+        - src: proxy-key.pem
+          dest: client-key.pem
+
+    - name: Upload kubelet client certificates
+      copy:
+      args:
+        src: /ansinetes/security/certs/{{item.src}}
+        dest: /etc/kubernetes/kubelet/{{item.dest}}
+      with_items:
+        - src: kubelet.pem
+          dest: client.pem
+        - src: kubelet-key.pem
+          dest: client-key.pem
+
+    - name: Upload scheduler client certificates
+      copy:
+      args:
+        src: /ansinetes/security/certs/{{item.src}}
+        dest: /etc/kubernetes/kube-scheduler/{{item.dest}}
+      with_items:
+        - src: scheduler.pem
+          dest: client.pem
+        - src: scheduler-key.pem
+          dest: client-key.pem
+
+    - name: Upload controller-manager client certificates
+      copy:
+      args:
+        src: /ansinetes/security/certs/{{item.src}}
+        dest: /etc/kubernetes/kube-controller-manager/{{item.dest}}
+      with_items:
+        - src: controller-manager.pem
+          dest: client.pem
+        - src: controller-manager-key.pem
+          dest: client-key.pem
+
+    - name: Create service account keys
+      command: "kt-client-cert-create sa"
+      args:
+        creates: /ansinetes/security/certs/sa.pem
+      delegate_to: localhost
+      become: False
+      when: inventory_hostname == play_hosts[0]
+
+    - name: Upload service account keys
+      copy:
+      args:
+        src: "{{item.src}}"
+        dest: "{{item.dest}}"
+      with_items:
+        - src: /ansinetes/security/certs/sa.pem
+          dest: /etc/kubernetes/kube-apiserver/sa.pem
+        - src: /ansinetes/security/certs/sa-key.pem
+          dest: /etc/kubernetes/kube-controller-manager/sa-key.pem
+
+    - name: Render kubecfg's
+      template:
+      args:
+        src: /etc/ansible/k8s-config/kubeconfig/{{item.src}}
+        dest: /etc/kubernetes/{{item.dest}}
+      with_items:
+        - src: kubelet.j2
+          dest: kubelet/config
+        - src: proxy.j2
+          dest: kube-proxy/config
+        - src: scheduler.j2
+          dest: kube-scheduler/config
+        - src: controller-manager.j2
+          dest: kube-controller-manager/config
+
+    - name: Render kubernetes .env files
+      template:
+      args:
+        src: /etc/ansible/k8s-config/{{item}}.j2
+        dest: /etc/kubernetes/{{item}}.env
+      with_items:
+        - apiserver
+        - config
+        - controller-manager
+        - kubelet
+        - proxy
+        - scheduler
+
+    - name: Render cluster add-ons
+      template:
+      args:
+        src: /etc/ansible/k8s-config/addons/{{item}}.j2
+        dest: /etc/kubernetes/addons/{{item}}
+      with_items:
+        - kubernetes-dashboard.yaml
+        - skydns-rc.yaml
+        - skydns-svc.yaml
+
+    - name: Systemd daemon reload
+      command: systemctl daemon-reload

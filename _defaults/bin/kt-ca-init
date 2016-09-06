@@ -1,0 +1,15 @@
+#!/bin/bash
+
+readonly script_dir=$(dirname "${BASH_SOURCE[0]}")
+. ${script_dir}/util.sh
+
+cd /ansinetes/security
+
+if [ -e ca.pem ]; then
+  log ca.pem already exists, will not overwrite it
+  exit 0
+fi
+
+cfssl gencert -initca csr-config.json | cfssljson -bare ca -
+
+rm -f ca.csr &> /dev/null

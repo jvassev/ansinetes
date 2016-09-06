@@ -1,0 +1,8 @@
+---
+- name: Start flannel
+
+  hosts: all
+
+  tasks:
+    - name: Start flanneld
+      service: name=flanneld state=started

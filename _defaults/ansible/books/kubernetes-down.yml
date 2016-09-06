@@ -1,0 +1,18 @@
+---
+- name: Create k8s config files
+
+  hosts: all
+
+  tasks:
+    - name: Stop services
+      service:
+      args:
+        name: "{{item}}"
+        state: stopped
+        enabled: yes
+      with_items:
+        - kube-apiserver.service
+        - kube-controller-manager.service
+        - kubelet.service
+        - kube-proxy.service
+        - kube-scheduler.service

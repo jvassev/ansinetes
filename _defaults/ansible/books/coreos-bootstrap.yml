@@ -1,0 +1,15 @@
+---
+- hosts: coreos
+  gather_facts: False
+  roles:
+    - vmware.coreos-bootstrap
+
+  tasks:
+    - name: Ensure custom facts directory exists
+      file: path=/etc/ansible/facts.d recurse=yes state=directory
+
+    - name: Install vsphere vm-id collector fact
+      copy: src=/etc/ansible/facts.d/ dest=/etc/ansible/facts.d/ mode=0755
+
+    - name: Collect facts
+      setup:

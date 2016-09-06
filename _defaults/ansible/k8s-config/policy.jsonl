@@ -1,0 +1,5 @@
+{"user":"admin" }
+{"user":"controller-manager" }
+{"user":"scheduler" }
+{"user":"kubelet" }
+{"user":"proxy" }

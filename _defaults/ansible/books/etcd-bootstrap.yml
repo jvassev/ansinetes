@@ -1,0 +1,69 @@
+---
+- name: Bootstrap etcd cluster
+
+  hosts: all
+
+  tasks:
+    - name: Stop etcd2
+      service: name=etcd2 state=stopped enabled=yes
+
+    - name: Purge etcd data
+      shell: "rm -frv /var/lib/etcd2/*"
+
+    - name: Create ssl dir
+      file: state=directory path=/etc/ssl/etcd/
+
+    - name: Create server certificate for client endpoint
+      command: "kt-server-cert-create -h localhost,127.0.0.1,{%for a in ansible_all_ipv4_addresses%}{{a}}{%if not loop.last%},{%endif%}{%endfor%} {{inventory_hostname}}-etcd-server"
+      delegate_to: localhost
+      args:
+        creates: /ansinetes/security/certs/{{inventory_hostname}}-etcd-server.pem
+      become: False
+
+    - name: Create server certificate for peer endpoint
+      command: "kt-server-cert-create -h localhost,127.0.0.1,{%for a in ansible_all_ipv4_addresses%}{{a}}{%if not loop.last%},{%endif%}{%endfor%} {{inventory_hostname}}-etcd-peer"
+      delegate_to: localhost
+      args:
+        creates: /ansinetes/security/certs/{{inventory_hostname}}-etcd-peer.pem
+      become: False
+
+    - name: Create client certificate
+      command: "kt-client-cert-create etcd-client"
+      delegate_to: localhost
+      when: inventory_hostname == play_hosts[0]
+      args:
+        creates: /ansinetes/security/certs/etcd-client.pem
+      become: False
+
+    - name: Upload ssl certificates and keys
+      copy: src=/ansinetes/security/{{item.src}} dest=/etc/ssl/etcd/{{item.dest}}
+      with_items:
+        - src: ca.pem
+          dest: ca.pem
+        - src: "certs/{{inventory_hostname}}-etcd-server-key.pem"
+          dest: "server-key.pem"
+        - src: "certs/{{inventory_hostname}}-etcd-server.pem"
+          dest: "server.pem"
+        - src: "certs/{{inventory_hostname}}-etcd-peer-key.pem"
+          dest: "peer-key.pem"
+        - src: "certs/{{inventory_hostname}}-etcd-peer.pem"
+          dest: "peer.pem"
+        - src: "certs/etcd-client-key.pem"
+          dest: "client-key.pem"
+        - src: "certs/etcd-client.pem"
+          dest: "client.pem"
+
+    - name: Create drop-in dir
+      file: dest={{item}} state=directory
+      with_items:
+        - /etc/etcd2
+        - /etc/systemd/system/etcd2.service.d
+
+    - name: Upload config file to /etc/systemd/system/etcd2.service.d/30-ansible
+      copy: src=/etc/ansible/etcd-config/30-ansible.conf dest=/etc/systemd/system/etcd2.service.d/30-ansible.conf
+
+    - name: Upload config file to /etc/etcd2/env
+      template: src=/etc/ansible/etcd-config/config-bootstrap.j2 dest=/etc/etcd2/env
+
+    - name: daemon-reload
+      command: systemctl daemon-reload

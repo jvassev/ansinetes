@@ -1,0 +1,8 @@
+---
+- name: Configure and start flannel
+
+  hosts: all
+
+  tasks:
+    - name: Stop flanneld
+      service: name=flanneld state=stopped

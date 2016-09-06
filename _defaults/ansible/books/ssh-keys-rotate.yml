@@ -1,0 +1,37 @@
+---
+# based on https://derpops.bike/2014/06/07/ssh-key-rotation-with-ansible/
+- name: Rotate SSH Keys
+
+  hosts: all
+
+  vars:
+    - new_pub_key: /ansinetes/security/new_priv_key.pub
+    - new_priv_key: /ansinetes/security/new_priv_key
+
+  tasks:
+    - name: Create new ssh key-pair
+      command: ssh-keygen -t rsa -N "" -q -f {{ new_priv_key }} -C "ansible-generated/rotation"
+      when: inventory_hostname == play_hosts[0]
+      delegate_to: localhost
+      become: False
+
+    - name: Add new key to authorized_keys
+      authorized_key:
+        key: "{{ lookup('file', new_pub_key) }}"
+        user: "{{ansible_user}}"
+        state: present
+
+    - name: Verify key is authorized
+      set_fact: ansible_private_ssh_key={{ new_priv_key }}
+
+    - name: Remove old key
+      authorized_key:
+        key: "{{ lookup('file', '/ansinetes/security/ansible-ssh-key.pub') }}"
+        user: "{{ansible_user}}"
+        state: absent
+
+    - name: Move new key into default location
+      shell: "mv {{ new_priv_key }} /ansinetes/security/ansible-ssh-key && mv {{ new_pub_key }} /ansinetes/security/ansible-ssh-key.pub"
+      when: inventory_hostname == play_hosts[0]
+      delegate_to: localhost
+      become: False

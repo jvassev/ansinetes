@@ -1,0 +1,22 @@
+---
+- name: Purges kubernets data in etcd
+
+  hosts: all
+
+  tasks:
+    - name: Stop services
+      service:
+      args:
+        name: "{{item}}"
+        state: stopped
+      with_items:
+        - kube-apiserver.service
+        - kube-controller-manager.service
+        - kubelet.service
+        - kube-proxy.service
+        - kube-scheduler.service
+
+    - name: Clear cluster state in etcd at key {{kubernetes_etcd_prefix}}
+      shell: |
+        etcdctl {{etcdctl_params}} rm -recursive {{kubernetes_etcd_prefix}} || echo Nothing to delete
+      when: inventory_hostname == play_hosts[0]

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+VMID=$(/usr/share/oem/bin/vmtoolsd --cmd  'info-get guestinfo.ovfenv' | sed -n 's/.*vCenterId="\(.*\)".*/\1/p')
+
+if [ "$VMID" == "" ];then
+  VMID="unknown"
+fi
+
+cat <<EOF
+{
+	"moid": "$VMID"
+}
+EOF

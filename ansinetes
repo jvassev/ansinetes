@@ -1,0 +1,165 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+die() {
+  echo -e >&2 "error: $@"
+  exit 1
+}
+
+log() {
+  echo >&2 "$@"
+}
+
+usage() {
+  echo TODO
+}
+
+realpath() {
+    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}" | sed 's:/*$::'
+}
+
+######## setup
+SH=0
+readonly ETCD_VERSION=v2.3.7
+readonly KUBECTL_VERSION=v1.3.6
+
+readonly ANSINETES_IMAGE=${ANSINETES_IMAGE:-jvassev/ansinetes}
+
+
+######## parse flags
+while [[ $# -gt 0 ]]; do
+  key="$1"
+  case $key in
+    -h|--help)
+      usage
+      exit 0
+    ;;
+    -p|--project)
+      ANSINETES_PROJECT="$2"
+      shift # past argument
+    ;;
+    -s|--shell)
+      SH=1
+    ;;
+    *)
+    die Unknown param $key
+    ;;
+   esac
+  shift # past argument or value
+done
+
+if [ "${ANSINETES_PROJECT:-}" == "" ]; then
+  die Project must be defined with -p or using \$ANSINETES_PROJECT var
+fi
+
+ANSINETES_PROJECT=$(realpath ${ANSINETES_PROJECT})
+readonly SHORT_NAME=$(basename ${ANSINETES_PROJECT})
+
+mkdir -p ${ANSINETES_PROJECT} &> /dev/null
+
+if [ $SH == 0 ]; then
+  docker run --rm -ti \
+    -h $(basename ${ANSINETES_PROJECT}) \
+    -e OUTER_USER=$(id -u) \
+    -v ${ANSINETES_PROJECT}/tmp:/tmp/ansible \
+    -v ${ANSINETES_PROJECT}:/ansinetes \
+    ${ANSINETES_IMAGE}
+  exit 0
+fi
+
+
+######## download etcdctl
+if [ ! -f ${ANSINETES_PROJECT}/tmp/etcd-bin/etcdctl ]; then
+  log Installing etcdctl locally...
+
+  mkdir -p ${ANSINETES_PROJECT}/tmp/etcd-bin &> /dev/null || true
+  pushd ${ANSINETES_PROJECT}/tmp/etcd-bin &> /dev/null
+
+  if [ "$(uname)" == "Darwin" ]; then
+    curl -L -# https://github.com/coreos/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-darwin-amd64.zip -o ${ANSINETES_PROJECT}/tmp/etcd.zip 
+    unzip ${ANSINETES_PROJECT}/tmp/etcd.zip &> /dev/null
+    mv etcd-*/etcdctl .
+    rm -fr etcd-* &> /dev/null
+    chmod +x etcdctl
+  else
+    curl -L -# https://github.com/coreos/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-amd64.tar.gz -o ${ANSINETES_PROJECT}/tmp/etcd.tar.gz  
+    tar xzf ${ANSINETES_PROJECT}/tmp/etcd.tar.gz --strip-components=1 &> /dev/null
+    rm -fr ${ANSINETES_PROJECT}/tmp/etcd-bin/Documentation ${ANSINETES_PROJECT}/tmp/etcd-bin/etcd &> /dev/null
+  fi
+
+  popd &> /dev/null
+fi
+
+
+####### download kubectl only for mac
+if [ "$(uname)" == "Darwin" ]; then
+  if [ ! -f ${ANSINETES_PROJECT}/tmp/kubectl-bin/kubectl ]; then
+    log Installing kubectl locally...
+    mkdir -p ${ANSINETES_PROJECT}/tmp/kubectl-bin &> /dev/null || true
+    pushd ${ANSINETES_PROJECT}/tmp/kubectl-bin &> /dev/null
+    curl -L -#  -O https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/darwin/amd64/kubectl
+    chmod +x kubectl
+    popd &> /dev/null
+  fi
+fi
+
+######## configure kubectl
+# get a random IP of a node of a cluster
+# get up to 3 nodes from the apiservers group skipping empty lines
+FACT_FILES=$(sed -n '/\[apiservers\]/{n;p;n;p;n;p;}' ${ANSINETES_PROJECT}/ansible/hosts | grep . | head -n 1)
+# build path to fact file
+FACT_FILES=${ANSINETES_PROJECT}/tmp/facts/${FACT_FILES}
+
+RANDOM_MASTER_IP=$(jq 'if .ansible_eth1 then
+ .ansible_eth1.ipv4.address
+elif .ansible_eth0 then
+ .ansible_eth0.ipv4.address
+elif .ansible_ens192 then
+ .ansible_ens192.ipv4.address
+else
+ "uknown"
+end' ${FACT_FILES} -r)
+
+PATH=${ANSINETES_PROJECT}/tmp/kubectl-bin:${ANSINETES_PROJECT}/tmp/k8s-bin:$PATH
+kubectl config set-cluster ${ANSINETES_PROJECT} \
+  --server=https://${RANDOM_MASTER_IP}:6443 \
+  --certificate-authority=${ANSINETES_PROJECT}/security/ca.pem \
+  > /dev/null
+
+kubectl config set-credentials ${ANSINETES_PROJECT}_admin \
+  --client-key=${ANSINETES_PROJECT}/security/certs/admin-key.pem \
+  --client-certificate=${ANSINETES_PROJECT}/security/certs/admin.pem \
+  > /dev/null
+
+kubectl config set-context ${ANSINETES_PROJECT} \
+  --cluster=${ANSINETES_PROJECT} \
+  --user=${ANSINETES_PROJECT}_admin > /dev/null
+
+######## prepare bash env
+readonly bash_cfg=$(mktemp)
+readonly cyan="\[\033[0;36m\]"
+readonly no_color="\[\033[0m\]"
+
+cp ~/.bashrc ${bash_cfg}
+
+cat << EOF >> ${bash_cfg}
+
+######### ansinetes customizations
+export ETCDCTL_ENDPOINTS=https://${RANDOM_MASTER_IP}:2379
+export ETCDCTL_CA_FILE=${ANSINETES_PROJECT}/security/ca.pem
+export ETCDCTL_CERT_FILE=${ANSINETES_PROJECT}/security/certs/etcd-client.pem
+export ETCDCTL_KEY_FILE=${ANSINETES_PROJECT}/security/certs/etcd-client-key.pem
+
+export PATH=${ANSINETES_PROJECT}/tmp/kubectl-bin:${ANSINETES_PROJECT}/tmp/etcd-bin:${ANSINETES_PROJECT}/tmp/k8s-bin:\$PATH
+export PS1="\${PS1}[${cyan}*${SHORT_NAME}*${no_color}] "
+
+kubectl config use-context ${ANSINETES_PROJECT} &> /dev/null
+source <(kubectl completion bash)
+
+echo Welcome to ansinetes virtual environment \"${ANSINETES_PROJECT}\"
+EOF
+
+bash --rcfile ${bash_cfg}
