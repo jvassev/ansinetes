@@ -18,11 +18,12 @@ usage() {
 }
 
 realpath() {
-    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}" | sed 's:/*$::'
+  DIR=$(echo "${1%/*}")
+  (cd "$DIR" && echo "$(pwd -P)")
 }
 
 ######## setup
-SH=0
+START_SHELL=0
 readonly ETCD_VERSION=v2.3.7
 readonly KUBECTL_VERSION=v1.3.6
 
@@ -60,7 +61,7 @@ readonly SHORT_NAME=$(basename ${ANSINETES_PROJECT})
 
 mkdir -p ${ANSINETES_PROJECT} &> /dev/null
 
-if [ $SH == 0 ]; then
+if [ $START_SHELL == 0 ]; then
   docker run --rm -ti \
     -h $(basename ${ANSINETES_PROJECT}) \
     -e OUTER_USER=$(id -u) \
@@ -79,13 +80,13 @@ if [ ! -f ${ANSINETES_PROJECT}/tmp/etcd-bin/etcdctl ]; then
   pushd ${ANSINETES_PROJECT}/tmp/etcd-bin &> /dev/null
 
   if [ "$(uname)" == "Darwin" ]; then
-    curl -L -# https://github.com/coreos/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-darwin-amd64.zip -o ${ANSINETES_PROJECT}/tmp/etcd.zip 
+    curl -L -# https://github.com/coreos/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-darwin-amd64.zip -o ${ANSINETES_PROJECT}/tmp/etcd.zip
     unzip ${ANSINETES_PROJECT}/tmp/etcd.zip &> /dev/null
     mv etcd-*/etcdctl .
     rm -fr etcd-* &> /dev/null
     chmod +x etcdctl
   else
-    curl -L -# https://github.com/coreos/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-amd64.tar.gz -o ${ANSINETES_PROJECT}/tmp/etcd.tar.gz  
+    curl -L -# https://github.com/coreos/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-amd64.tar.gz -o ${ANSINETES_PROJECT}/tmp/etcd.tar.gz
     tar xzf ${ANSINETES_PROJECT}/tmp/etcd.tar.gz --strip-components=1 &> /dev/null
     rm -fr ${ANSINETES_PROJECT}/tmp/etcd-bin/Documentation ${ANSINETES_PROJECT}/tmp/etcd-bin/etcd &> /dev/null
   fi
