@@ -14,11 +14,12 @@ It has already taken some decisions for you:
 * Linux or Mac
 * Docker running locally (there will be volumes being host-mounted)
 * Vagrant (only if you're going to use it)
+* jq [installed](https://stedolan.github.io/jq/)
 
 # Install
 ```bash
-$ curl -Ls -O https://raw.githubusercontent.com/jvassev/ansinetes/master/ansinetes
-$ chmod +x ansinetes
+curl -Ls -O https://raw.githubusercontent.com/jvassev/ansinetes/master/ansinetes
+chmod +x ansinetes
 ```
 
 This script will pull an image from dockerhub with Ansible 2.x installed. On first run it will populate a local directory with playbooks and their supporting resources.
@@ -211,7 +212,7 @@ kube-system   kubernetes-dashboard-2982215621-w1nu4   1/1       Running   0     
 Your old kubecfg will be left intact. In fact every time you enter a shell with `-s` the kubecfg will be enriched with configuration about the cluster and the full path to the project dir will be used as the context and cluster name.
 
 # Deployment description
-When vagrant is used 4 VMs are created. This can be changed by editing the vagrant/config.rb script. 3 nodes take part in the etcd quorum while the rest are proxies. There are two api-servers. Controller-manager and Scheduler run with `--leader-elect` option. Components that target the apiserver will talk to the first node from the 'apiservers' group (no HA here). The default `hosts` file describes the role mapping:
+When Vagrant is used 4 VMs are created. This can be changed by editing the vagrant/config.rb script. 3 nodes take part in the etcd quorum while the rest are proxies. There are two api-servers. Controller-manager and Scheduler run with `--leader-elect` option. Components that target the apiserver will talk to the first node from the 'apiservers' group (no HA here). The default `hosts` file describes the role mapping:
 
 ```ini
 [coreos]
@@ -245,7 +246,7 @@ Every component authenticates to the apiserver using a private key. Have a look 
 
 Controller-manager runs under a service account verified by public/private key.
 
-Only two addons are deployed: Dashboard and DNS. You may want to secure the Dashboard as it has full access to the cluster (on behalf of the kubelete user). For convinience the dashboard is exposed on port 30033. You may change/disable this. The add-ons yamls are touched a bit to work with the service accounts used to protect the apiserver.
+Only two addons are deployed: Dashboard and DNS. You may want to secure the Dashboard as it has full access to the cluster (on behalf of the kubelete user). For convinience the dashboard is exposed on port 30033. You may change/disable this. The add-ons yamls are touched a bit to work with the service accounts used to protect the apiserver. Add-on container specs are modified a bit: the certificates folder are mounted as `hostPath` as apiserver is accessible only over https+service account.
 
 # Customizing the deployment
 The easiest way to customize the deployment is to edit the `ansible/group_vars/all.yml` file. You can control many options there. If you want to experiment with other Kubernetes config options you can edit the ansible/k8s-config/*.j2 templates. They are borrowed from the [init](https://github.com/Kubernetes/contrib/tree/master/init/systemd) contrib dir. If you find an option worthy of putting in a group var please contribute! The systemd unit files will hardly need to be touched though. The `hosts` can be changed to remap/resize pools allocated to different components.
