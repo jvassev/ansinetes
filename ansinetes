@@ -56,10 +56,10 @@ if [ "${ANSINETES_PROJECT:-}" == "" ]; then
   die Project must be defined with -p or using \$ANSINETES_PROJECT var
 fi
 
+mkdir -p ${ANSINETES_PROJECT} &> /dev/null
 ANSINETES_PROJECT=$(realpath ${ANSINETES_PROJECT})
 readonly SHORT_NAME=$(basename ${ANSINETES_PROJECT})
 
-mkdir -p ${ANSINETES_PROJECT} &> /dev/null
 
 if [ $START_SHELL == 0 ]; then
   docker run --rm -ti \
