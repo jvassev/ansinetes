@@ -43,7 +43,7 @@ while [[ $# -gt 0 ]]; do
       shift # past argument
     ;;
     -s|--shell)
-      SH=1
+      START_SHELL=1
     ;;
     *)
     die Unknown param $key
@@ -144,7 +144,7 @@ readonly bash_cfg=$(mktemp)
 readonly cyan="\[\033[0;36m\]"
 readonly no_color="\[\033[0m\]"
 
-cp ~/.bashrc ${bash_cfg}
+cp ~/.bashrc ${bash_cfg} &> /dev/null || echo No .bashrc file found
 
 cat << EOF >> ${bash_cfg}
 
