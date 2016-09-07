@@ -73,7 +73,7 @@ TASK [Collect facts] ***********************************************************
 ```
 
 ## Create a CA
-Certificates are created using [cfssl](https://github.com/cloudflare/cfssl). You can edit the demo/security/*.json files before creating the CA. The CA will not be auto-created to give you a chanse to configure it. Defaults are pretty good though (at least for development). The json files are in the cfssl format. Finally, run the `kt-ca-init` command:
+Certificates are created using [cfssl](https://github.com/cloudflare/cfssl). You can edit the demo/security/*.json files before creating the CA. The CA will not be auto-created to give you a chance to configure it. Defaults are pretty good though (at least for development). The json files are in the cfssl format. Finally, run the `kt-ca-init` command:
 
 ```bash
 [ansinetes@demo ~]$ kt-ca-init
@@ -85,7 +85,7 @@ Certificates are created using [cfssl](https://github.com/cloudflare/cfssl). You
 2016/09/02 20:49:25 [INFO] signed certificate with serial number 4640577027862920487
 ```
 
-The ca.pem and ca-key.pem will be used for both etcd and Kubernetes later. The kt-* scripts are thin wrappers around cfssl and cfssljson.
+The ca.pem and ca-key.pem will be used for both etcd and Kubernetes later. The kt-* scripts are thin wrappers around cfssl and cfssljson. Server certificates are valid for all IP of a node (`ansible_all_ipv4_addresses`). For apiserver nodes the https certificate is also valid for the kubernets service IP (by default 10.254.0.1).
 
 ## Configure etcd
 Etcd is essential both to Kubernetes and flannel. Ansinetes will deploy a 3-node cluster with the rest of the nodes working as proxies. This will enable every component to talk to localhost and target the etcd cluster. The cluster is bootstrapped using [static configuration](https://coreos.com/etcd/docs/latest/clustering.html#static).
