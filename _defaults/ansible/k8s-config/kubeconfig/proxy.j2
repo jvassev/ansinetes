@@ -1,19 +1,10 @@
-{%set facts = hostvars[groups.apiservers[0]] -%}
-{%if facts.ansible_eth1 is defined -%}
-  {%set url = 'https://' + facts.ansible_eth1.ipv4.address  + ':6443' -%}
-{%elif facts.ansible_eth0 is defined -%}
-  {%set url = 'https://' + facts.ansible_eth0.ipv4.address  + ':6443' -%}
-{%elif facts.ansible_ens192 is defined -%}
-  {%set url = 'https://' + facts.ansible_ens192.ipv4.address+ ':6443' -%}
-{%else -%}
-  {%set url = 'unknown' -%}
-{%endif -%}
+---
 apiVersion: v1
 kind: Config
 clusters:
   - cluster:
       certificate-authority: /etc/kubernetes/ca.pem
-      server: {{url}}
+      server: https://{{hostvars[groups.apiservers[0]][public_iface].ipv4.address}}:6443
     name: kubernetes
 contexts:
   - context:

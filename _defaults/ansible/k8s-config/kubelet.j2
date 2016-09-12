@@ -2,28 +2,10 @@
 # kubernetes kubelet (minion) config
 # http://kubernetes.io/docs/admin/kubelet/
 
-{%if ansible_eth1 is defined -%}
-  {%set ipv4address = ansible_eth1.ipv4.address -%}
-  {%set iface = 'ansible_eth1' -%}
-{%elif ansible_eth0 is defined -%}
- {%set ipv4address = ansible_eth0.ipv4.address -%}
- {%set iface = 'ansible_eth0' -%}
-{%elif ansible_ens192 is defined -%}
- {%set ipv4address = ansible_ens192.ipv4.address -%}
- {%set iface = 'ansible_ens192' -%}
-{%else -%}
-  {%set ipv4address = 'unknown' -%}
-  {%set iface = 'unknown' -%}
-{%endif -%}
 
 {%set url  -%}
 {%for name in groups.apiservers -%}
-  {%set facts = hostvars[name] -%}
-  {%if facts.ansible_eth1 is defined -%}
-https://{{facts.ansible_eth1.ipv4.address}}:6443,{%elif facts.ansible_eth0 is defined -%}
-https://{{facts.ansible_eth0.ipv4.address}}:6443,{%elif facts.ansible_ens192 is defined -%}
-https://{{facts.ansible_ens192.ipv4.address}}:6443,{%else -%}
-  {%endif -%}
+https://{{hostvars[name][public_iface].ipv4.address}}:6443,
 {%endfor -%}
 {%endset%}
 
@@ -34,7 +16,7 @@ KUBELET_ADDRESS="--address=0.0.0.0"
 KUBELET_PORT="--port=10250"
 
 # You may leave this blank to use the actual hostname
-KUBELET_HOSTNAME="--hostname-override={{ipv4address}}"
+KUBELET_HOSTNAME="--hostname-override={{vars[public_iface].ipv4.address}}"
 
 # location of the api-server
 KUBELET_API_SERVER="--api-servers={{url}}"

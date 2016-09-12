@@ -5,20 +5,6 @@
 # http://kubernetes.io/docs/admin/kube-apiserver/
 
 
-{%if ansible_eth1 is defined -%}
-  {%set ipv4address = ansible_eth1.ipv4.address -%}
-  {%set iface = 'ansible_eth1' -%}
-{%elif ansible_eth0 is defined -%}
- {%set ipv4address = ansible_eth0.ipv4.address -%}
- {%set iface = 'ansible_eth0' -%}
-{%elif ansible_ens192 is defined -%}
- {%set ipv4address = ansible_ens192.ipv4.address -%}
- {%set iface = 'ansible_ens192' -%}
-{%else -%}
-  {%set ipv4address = 'unknown' -%}
-  {%set iface = 'unknown' -%}
-{%endif -%}
-
 # The address on the local server to listen to.
 KUBE_API_ADDRESS="--insecure-bind-address=127.0.0.1"
 
@@ -44,7 +30,7 @@ KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,NamespaceExists,L
 KUBE_API_ARGS="\
 --enable-swagger-ui \
 --apiserver-count={{groups.apiservers | length}} \
---advertise-address={{ipv4address}} \
+--advertise-address={{vars[public_iface].ipv4.address}} \
 --etcd-prefix={{kubernetes_etcd_prefix}} \
 --authorization-mode=ABAC \
 --service-node-port-range={{kubernetes_service_port_range}} \
