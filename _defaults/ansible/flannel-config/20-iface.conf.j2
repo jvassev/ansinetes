@@ -1,5 +1,6 @@
+{%set ipv4address = vars[public_iface].ipv4.address -%}
 [Service]
-Environment=FLANNELD_IFACE={{vars[public_iface].ipv4.address}}
+Environment=FLANNELD_IFACE={{ipv4address}}
 Environment=FLANNELD_ETCD_ENDPOINTS=https://localhost:2379
 Environment=FLANNELD_ETCD_CAFILE=/etc/ssl/etcd/ca.pem
 Environment=FLANNELD_ETCD_CERTFILE=/etc/ssl/etcd/client.pem

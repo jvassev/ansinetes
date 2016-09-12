@@ -20,7 +20,7 @@ ETCD_PROXY=on
 ETCD_LISTEN_CLIENT_URLS="https://127.0.0.1:2379,https://{{ipv4address}}:2379"
 
 ETCD_INITIAL_CLUSTER="{%for qm in groups['etcd-quorum-members'] -%}
-{{hostvars[qm]['ansible_machine_id']}}=https://{{hostvars[qm][public_iface]['ipv4']['address']}}:2380{%if not loop.last -%},{%-endif%}
+{{hostvars[qm]['ansible_machine_id']}}=https://{{hostvars[qm][public_iface].ipv4.address}}:2380{%if not loop.last -%},{%-endif%}
           {%-endfor%}"
 
 

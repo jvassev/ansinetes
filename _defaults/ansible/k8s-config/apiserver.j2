@@ -4,6 +4,7 @@
 # The following values are used to configure the kube-apiserver
 # http://kubernetes.io/docs/admin/kube-apiserver/
 
+{%set ipv4address = vars[public_iface].ipv4.address -%}
 
 # The address on the local server to listen to.
 KUBE_API_ADDRESS="--insecure-bind-address=127.0.0.1"
@@ -30,7 +31,7 @@ KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,NamespaceExists,L
 KUBE_API_ARGS="\
 --enable-swagger-ui \
 --apiserver-count={{groups.apiservers | length}} \
---advertise-address={{vars[public_iface].ipv4.address}} \
+--advertise-address={{ipv4address}} \
 --etcd-prefix={{kubernetes_etcd_prefix}} \
 --authorization-mode=ABAC \
 --service-node-port-range={{kubernetes_service_port_range}} \
