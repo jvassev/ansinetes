@@ -246,7 +246,7 @@ Every component authenticates to the apiserver using a private key. Have a look 
 
 Controller-manager runs under a service account verified by public/private key.
 
-Only two addons are deployed: Dashboard and DNS. You may want to secure the Dashboard as it has full access to the cluster (on behalf of the kubelete user). For convinience the dashboard is exposed on port 30033. You may change/disable this. The add-ons yamls are touched a bit to work with the service accounts used to protect the apiserver. Add-on container specs are modified a bit: the certificates folder are mounted as `hostPath` as apiserver is accessible only over https+service account.
+Only three add-ons are deployed: Dashboard, DNS and Heapster. You may want to secure the Dashboard as it has full access to the cluster (on behalf of the kubelete user). For convinience the dashboard is exposed on port 30033. You may change/disable this. The add-ons yamls may be touched a bit to work with the service accounts used to protect the apiserver.
 
 # Customizing the deployment
 The easiest way to customize the deployment is to edit the `ansible/group_vars/all.yml` file. You can control many options there. If you want to experiment with other Kubernetes config options you can edit the ansible/k8s-config/*.j2 templates. They are borrowed from the [init](https://github.com/Kubernetes/contrib/tree/master/init/systemd) contrib dir. If you find an option worthy of putting in a group var please contribute! The systemd unit files will hardly need to be touched though. The `hosts` can be changed to remap/resize pools allocated to different components.

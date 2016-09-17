@@ -247,6 +247,8 @@
         - kubernetes-dashboard.yaml
         - skydns-rc.yaml
         - skydns-svc.yaml
+        - heapster-controller.yaml
+        - heapster-service.yaml
 
     - name: Systemd daemon reload
       command: systemctl daemon-reload

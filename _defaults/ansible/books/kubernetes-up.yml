@@ -35,5 +35,8 @@
         - kubernetes-dashboard.yaml
         - skydns-rc.yaml
         - skydns-svc.yaml
+        - heapster-controller.yaml
+        - heapster-service.yaml
+
 
 
