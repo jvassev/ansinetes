@@ -1,7 +1,7 @@
 ---
 kubernetes_install:
-  version: v1.3.6
-  sha256: sha256:2db7ace2f72a2e162329a6dc969a5a158bb8c5d0f8054c5b1b2b1063aa22020d
+  version: v1.3.7
+  sha256: sha256:ad18566a09ff87b36107c2ea238fa5e20988d7a62c85df9c8598920679fec4a1
 
 flannel:
   network: "25.0.0.0/16"

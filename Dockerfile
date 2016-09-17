@@ -20,6 +20,6 @@ RUN yum -y install gcc openssl-devel python-devel libffi-devel && \
     pip install ansible==2.1.1.0 && \
     yum -y remove  gcc openssl-devel python-devel
 
-COPY _defaults /_defaults
-
 COPY start.sh /
+
+COPY _defaults /_defaults
