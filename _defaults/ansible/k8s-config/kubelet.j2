@@ -20,7 +20,7 @@ KUBELET_HOSTNAME="--hostname-override={{ipv4address}}"
 # location of the api-server
 KUBELET_API_SERVER="--api-servers={{url}}"
 
-{%set node_labels = "--node-labels=ansinetes=" + inventory_hostname -%}
+{%set node_labels = "--node-labels=ansible_hostname=" + inventory_hostname -%}
 {%if ansible_local.vmware.moid -%}
   {%set  node_labels = node_labels + ',vm-id=' + ansible_local.vmware.moid %}
 {%endif -%}
@@ -30,7 +30,6 @@ KUBELET_ARGS="\
 --cluster-dns={{kubernetes_dns.ip}} \
 --serialize-image-pulls=false \
 --cluster-domain={{kubernetes_dns.domain}} \
---read-only-port=0 \
 --kubeconfig=/etc/kubernetes/kubelet/config \
 {{node_labels}} \
 "

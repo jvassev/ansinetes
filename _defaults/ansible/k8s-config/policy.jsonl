@@ -3,4 +3,4 @@
 {"user":"scheduler" }
 {"user":"kubelet" }
 {"user":"proxy" }
-{"user":"default" }
+{"user":"system:serviceaccount:kube-system:default" }

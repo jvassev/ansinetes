@@ -240,11 +240,11 @@ kbt-3
 
 ```
 
-Systemd units are installed uniformly everywhere but the services are started and enabled only on the designated nodes. If you change the service to node mapping you need to `Kubernetes-up.yml` your environment again (it will stop all services at first). Kubelet and Proxy run on every node.
+Systemd units are installed uniformly everywhere but are enabled and started only on the designated nodes. If you change the service to node mapping you need to run `kubernetes-up.yml` and `kubernetes-down.yml` again. Kubelet and Proxy run on every node.
 
-Every component authenticates to the apiserver using a private key. Have a look at the jsonl policy file for details.
-
-Controller-manager runs under a service account verified by public/private key.
+Api-server is started with `--authorization-mode=ABAC`. Have a look at the jsonl policy file for details.
+Every component authenticates to the apiserver using a private key under a service account (mapping the CN to the username). The default service account for the kube-system namespace has all privileges.
+Additionally an admin user is created and is used by `kubectl`.
 
 Only three add-ons are deployed: Dashboard, DNS and Heapster. You may want to secure the Dashboard as it has full access to the cluster (on behalf of the kubelete user). For convinience the dashboard is exposed on port 30033. You may change/disable this. The add-ons yamls may be touched a bit to work with the service accounts used to protect the apiserver.
 

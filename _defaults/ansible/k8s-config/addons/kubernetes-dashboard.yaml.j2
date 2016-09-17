@@ -45,24 +45,13 @@ spec:
           # Uncomment the following line to manually specify Kubernetes API server Host
           # If not specified, Dashboard will attempt to auto discover the API server and connect
           # to it. Uncomment only if the default does not work.
-          - --apiserver-host=https://{{kubernetes_apiserver_ip}}
+          #- --apiserver-host=https://{{kubernetes_apiserver_ip}}
         livenessProbe:
           httpGet:
             path: /
             port: 9090
           initialDelaySeconds: 30
           timeoutSeconds: 30
-        volumeMounts:
-        - mountPath: /etc/kubernetes
-          name: k8s
-          readOnly: true
-        env:
-        - name: KUBECONFIG
-          value: /etc/kubernetes/kubelet/config
-      volumes:
-      - name: k8s
-        hostPath:
-          path: /etc/kubernetes
 ---
 kind: Service
 apiVersion: v1
