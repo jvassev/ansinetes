@@ -3,3 +3,4 @@
 {"user":"scheduler" }
 {"user":"kubelet" }
 {"user":"proxy" }
+{"user":"default" }

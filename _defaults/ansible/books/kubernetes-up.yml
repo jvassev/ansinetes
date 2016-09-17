@@ -4,33 +4,6 @@
   hosts: all
 
   tasks:
-    - name: Upload systemd unit files
-      copy:
-      args:
-        src: /etc/ansible/k8s-config/systemd/{{item}}
-        dest: /etc/systemd/system/{{item}}
-        owner: root
-      with_items:
-        - kube-apiserver.service
-        - kube-controller-manager.service
-        - kubelet.service
-        - kube-proxy.service
-        - kube-scheduler.service
-      register: systemd
-
-    - name: Reload daemon
-      command: systemctl daemon-reload
-      when: "{{systemd.changed}}"
-
-    - name: Stop all services
-      service: name={{item}} state=stopped
-      with_items:
-        - kube-apiserver.service
-        - kube-controller-manager.service
-        - kubelet.service
-        - kube-proxy.service
-        - kube-scheduler.service
-
     - name: Start apiservers
       service: name=kube-apiserver.service state={{item.state}} enabled={{item.enabled}}
       with_items:

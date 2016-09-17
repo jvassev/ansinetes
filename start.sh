@@ -49,8 +49,9 @@ EOF
 
   popd > /dev/null
 
-  cat << EOF > .gitignore
+  cat << EOF > /ansinetes/.gitignore
 tmp/
+vagrant/.vagrant
 EOF
   fi
 fi
