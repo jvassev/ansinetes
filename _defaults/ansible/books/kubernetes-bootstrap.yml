@@ -238,6 +238,48 @@
         - proxy
         - scheduler
 
+    - name: Create ovpn certificates
+      delegate_to: localhost
+      become: False
+      when: inventory_hostname == play_hosts[0]
+      command: "kt-server-cert-create -h 127.0.0.1 ovpn-server"
+      args:
+        creates: /ansinetes/security/certs/ovpn-server.pem
+
+    - name: Create ovpn client certificates
+      delegate_to: localhost
+      become: False
+      when: inventory_hostname == play_hosts[0]
+      command: "kt-client-cert-create ovpn-client"
+      args:
+        creates: /ansinetes/security/certs/ovpn-client.pem
+
+    - name: Create ovpn dh params
+      delegate_to: localhost
+      become: False
+      when: inventory_hostname == play_hosts[0]
+      command: "openssl dhparam -out /ansinetes/security/certs/ovpn-dh.pem 1024"
+      args:
+        creates: /ansinetes/security/certs/ovpn-dh.pem
+
+    - name: Create ovpn p12 cert bundle
+      delegate_to: localhost
+      become: False
+      when: inventory_hostname == play_hosts[0]
+      command: "openssl pkcs12 -export -out ovpn.p12 -inkey ovpn-server-key.pem -in ovpn-server.pem -certfile ../ca.pem -password pass:"
+      args:
+        chdir: /ansinetes/security/certs
+        creates: /ansinetes/security/certs/ovpn.p12
+
+    - name: Create ovpn client profile
+      delegate_to: localhost
+      become: False
+      when: inventory_hostname == play_hosts[0]
+      template:
+      args:
+        src: /etc/ansible/k8s-config/addons/ovpn-client.conf.j2
+        dest: /ansinetes/ovpn-client.conf
+
     - name: Render cluster add-ons
       template:
       args:
@@ -249,6 +291,9 @@
         - skydns-svc.yaml
         - heapster-controller.yaml
         - heapster-service.yaml
+        - ovpn-secrets.yaml
+        - ovpn-controller.yaml
+        - ovpn-service.yaml
 
     - name: Systemd daemon reload
       command: systemctl daemon-reload

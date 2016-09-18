@@ -16,8 +16,8 @@ RUN yum -y install python-setuptools openssh python-crypto && \
 	easy_install pip && \
 	pip install setuptools -U
 
-RUN yum -y install gcc openssl-devel python-devel libffi-devel && \
-    pip install ansible==2.1.1.0 && \
+RUN yum -y install gcc openssl openssl-devel python-devel libffi-devel && \
+    pip install ansible==2.1.1.0 netaddr && \
     yum -y remove  gcc openssl-devel python-devel
 
 COPY start.sh /

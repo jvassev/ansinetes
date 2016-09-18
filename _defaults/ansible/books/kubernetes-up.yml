@@ -37,6 +37,9 @@
         - skydns-svc.yaml
         - heapster-controller.yaml
         - heapster-service.yaml
+        - ovpn-secrets.yaml
+        - ovpn-controller.yaml
+        - ovpn-service.yaml
 
 
 

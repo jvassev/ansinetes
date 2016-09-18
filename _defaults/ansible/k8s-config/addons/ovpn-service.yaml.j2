@@ -1,0 +1,13 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: openvpn
+  namespace: kube-system
+spec:
+  type: NodePort
+  ports:
+  - port: 1194
+    targetPort: 1194
+    nodePort: {{ovpn.node_port}}
+  selector:
+    name: openvpn

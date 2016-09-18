@@ -1,0 +1,20 @@
+client
+nobind
+dev tun
+proto tcp
+
+remote {{hostvars[play_hosts[0]][public_iface].ipv4.address}} {{ovpn.node_port}} tcp
+
+<ca>
+{{ lookup('file', '/ansinetes/security/ca.pem')}}
+</ca>
+
+<cert>
+{{ lookup('file', '/ansinetes/security/certs/ovpn-client.pem')}}
+</cert>
+
+<key>
+{{ lookup('file', '/ansinetes/security/certs/ovpn-client-key.pem')}}
+</key>
+
+key-direction 1

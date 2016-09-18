@@ -248,6 +248,28 @@ Additionally an admin user is created and is used by `kubectl`.
 
 Only three add-ons are deployed: Dashboard, DNS and Heapster. You may want to secure the Dashboard as it has full access to the cluster (on behalf of the kubelete user). For convinience the dashboard is exposed on port 30033. You may change/disable this. The add-ons yamls may be touched a bit to work with the service accounts used to protect the apiserver.
 
+While not technically an add-on an OpenVPN [service](https://github.com/offlinehacker/openvpn-k8s) is also deployed by default. During development it is sometimes very useful to make your workstation part of the Kubernetes service network. When you run the playbook `kubernetes-bootstrap.yml` an openvpn client configuration is re-generated locally. You can then "join" the Kubernetes service network using:
+```bash
+sudo openvpn ovpn-client.conf
+Sun Sep 18 22:40:05 2016 OpenVPN 2.3.7 x86_64-pc-linux-gnu [SSL (OpenSSL)] [LZO] [EPOLL] [PKCS11] [MH] [IPv6] built on Jul  8 2015
+.....
+Sun Sep 18 22:40:08 2016 /sbin/ip addr add dev tun0 local 10.241.0.6 peer 10.241.0.5
+Sun Sep 18 22:40:08 2016 Initialization Sequence Completed
+```
+Then, assuming you are running with the default config, you should be able to resolve the kube api-server:
+```bash
+nslookup kubernetes.default.svc.cluster.local 10.254.0.2
+Server:     10.254.0.2
+Address:    10.254.0.2#53
+
+Non-authoritative answer:
+Name:   kubernetes.default.svc.cluster.local
+Address: 10.254.0.1
+```
+
+OpenVPN can be configured to change the DNS of your machine but it's highly OS-specific and it's not done.
+
+
 # Customizing the deployment
 The easiest way to customize the deployment is to edit the `ansible/group_vars/all.yml` file. You can control many options there. If you want to experiment with other Kubernetes config options you can edit the ansible/k8s-config/*.j2 templates. They are borrowed from the [init](https://github.com/Kubernetes/contrib/tree/master/init/systemd) contrib dir. If you find an option worthy of putting in a group var please contribute! The systemd unit files will hardly need to be touched though. The `hosts` can be changed to remap/resize pools allocated to different components.
 An example `all.yml` file is given bellow to
@@ -311,3 +333,4 @@ Ansible hangs sometimes when uploading files. You may need to Ctrl+C the run and
 * [Enabling HTTPS in an existing etcd cluster](https://coreos.com/etcd/docs/latest/etcd-live-http-to-https-migration.html)
 * [Configuring flannel for container networking](https://coreos.com/flannel/docs/latest/flannel-config.html)
 * [docker-Kubernetes-tls-guide](https://github.com/kelseyhightower/docker-Kubernetes-tls-guide)
+* [OpenVPN for Kubernetes](https://github.com/offlinehacker/openvpn-k8s)

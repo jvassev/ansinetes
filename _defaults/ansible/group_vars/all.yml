@@ -17,6 +17,12 @@ kubernetes_dns:
   replicas: 2
   domain: "cluster.local"
 
+ovpn:
+  replicas: 2
+  network: "10.241.0.0"
+  mask: "255.255.0.0"
+  node_port: 30044
+
 kubernetes_etcd_prefix: /registry
 
 kubernetes_dashboard_port: 30033
