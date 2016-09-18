@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# based on https://github.com/kylemanna/docker-openvpn/blob/master/bin/ovpn_genconfig
+cidr2mask()
+{
+    local i
+    local subnetmask=""
+    local cidr=${1#*/}
+    local full_octets=$(($cidr/8))
+    local partial_octet=$(($cidr%8))
+
+    for ((i=0;i<4;i+=1)); do
+        if [ $i -lt $full_octets ]; then
+            subnetmask+=255
+        elif [ $i -eq $full_octets ]; then
+            subnetmask+=$((256 - 2**(8-$partial_octet)))
+        else
+            subnetmask+=0
+        fi
+        [ $i -lt 3 ] && subnetmask+=.
+    done
+    echo $subnetmask
+}
+
+cidr2mask "$@"

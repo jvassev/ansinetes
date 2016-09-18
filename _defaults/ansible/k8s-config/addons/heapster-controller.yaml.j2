@@ -12,7 +12,8 @@
   {% set nanny_memory = (90 * 1024 + num_nodes * nanny_memory_per_node)|string + "Ki" -%}
   {% set metrics_cpu = (80 + num_nodes * metrics_cpu_per_node)|string + "m" -%}
 {% endif -%}
-
+{# https://github.com/kubernetes/kubernetes/tree/master/cluster/addons/cluster-monitoring/standalone -#}
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:

@@ -29,9 +29,9 @@ spec:
             - name: OVPN_PROTO
               value: tcp
             - name: OVPN_K8S_SERVICE_NETWORK
-              value: {{kubernetes_cluster_ip_range | ipaddr('network')}}
+              value: {{ kubernetes_cluster_ip_range | ipaddr('network')}}
             - name: OVPN_K8S_SERVICE_SUBNET
-              value: 255.255.0.0
+              value: {{ lookup('pipe', 'cidr2mask ' + kubernetes_cluster_ip_range) }}
             - name: OVPN_K8S_DNS
               value: {{kubernetes_dns.ip}}
             - name: OVPN_K8S_DOMAIN
