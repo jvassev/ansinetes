@@ -246,7 +246,7 @@ Api-server is started with `--authorization-mode=ABAC`. Have a look at the jsonl
 Every component authenticates to the apiserver using a private key under a service account (mapping the CN to the username). The default service account for the kube-system namespace has all privileges.
 Additionally an admin user is created and is used by `kubectl`.
 
-Only three add-ons are deployed: Dashboard, DNS and Heapster. You may want to secure the Dashboard as it has full access to the cluster (on behalf of the kubelete user). For convinience the dashboard is exposed on port 30033. You may change/disable this. The add-ons yamls may be touched a bit to work with the service accounts used to protect the apiserver.
+Only three add-ons are deployed: Dashboard, DNS and Heapster. You may want to secure the Dashboard as it has full access to the cluster (on behalf of the kubelete user). The add-ons yamls may be touched a bit.
 
 While not technically an add-on an OpenVPN [service](https://github.com/offlinehacker/openvpn-k8s) is also deployed by default. During development it is sometimes very useful to make your workstation part of the Kubernetes service network. When you run the playbook `kubernetes-bootstrap.yaml` an openvpn client configuration is re-generated locally. You can then "join" the Kubernetes service network using:
 ```bash

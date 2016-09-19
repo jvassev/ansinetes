@@ -127,12 +127,14 @@ end' ${FACT_FILES} -r)
 PATH=${ANSINETES_PROJECT}/tmp/kubectl-bin:${ANSINETES_PROJECT}/tmp/k8s-bin:$PATH
 kubectl config set-cluster ${ANSINETES_PROJECT} \
   --server=https://${RANDOM_MASTER_IP}:6443 \
+  --embed-certs=true \
   --certificate-authority=${ANSINETES_PROJECT}/security/ca.pem \
   > /dev/null
 
 kubectl config set-credentials ${ANSINETES_PROJECT}_admin \
   --client-key=${ANSINETES_PROJECT}/security/certs/admin-key.pem \
   --client-certificate=${ANSINETES_PROJECT}/security/certs/admin.pem \
+  --embed-certs=true \
   > /dev/null
 
 kubectl config set-context ${ANSINETES_PROJECT} \
