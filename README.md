@@ -250,9 +250,9 @@ Systemd units are installed uniformly everywhere but are enabled and started onl
 
 Api-server is started with `--authorization-mode=ABAC`. Have a look at the jsonl policy file for details.
 Every component authenticates to the apiserver using a private key under a service account (mapping the CN to the username). The default service account for the kube-system namespace has all privileges.
-Additionally an admin user is created and is used by `kubectl`.
+Additionally an `admin` user is created and is used by `kubectl`. There is also username/password authentication configured for the admin user with default password `pass123`. You can change it or add other users to the file `token.csv` before bootstrapping the cluster.
 
-Only three add-ons are deployed: Dashboard, DNS and Heapster. You may want to secure the Dashboard as it has full access to the cluster (on behalf of the kubelete user). The add-ons yamls may be touched a bit.
+Only three add-ons are deployed: Dashboard, DNS and Heapster. The add-ons yamls may be touched a bit.
 
 While not technically an add-on an OpenVPN [service](https://github.com/offlinehacker/openvpn-k8s) is also deployed by default. During development it is sometimes very useful to make your workstation part of the Kubernetes service network. When you run the playbook `kubernetes-bootstrap.yaml` an openvpn client configuration is re-generated locally. You can then "join" the Kubernetes service network using:
 ```bash
