@@ -52,6 +52,7 @@ EOF
   cat << EOF > /ansinetes/.gitignore
 tmp/
 vagrant/.vagrant
+*.retry
 EOF
   fi
 fi

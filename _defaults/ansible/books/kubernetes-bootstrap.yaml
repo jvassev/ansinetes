@@ -210,6 +210,12 @@
         - src: /ansinetes/security/certs/sa-key.pem
           dest: /etc/kubernetes/kube-controller-manager/sa-key.pem
 
+    - name: Upload token.csv
+      copy:
+      args:
+        src: /etc/ansible/k8s-config/token.csv
+        dest: /etc/kubernetes/token.csv
+
     - name: Render kubecfg's
       template:
       args:
