@@ -211,6 +211,12 @@ kube-system   kubernetes-dashboard-2982215621-w1nu4   1/1       Running   0     
 
 Your old kubecfg will be left intact. In fact every time you enter a shell with `-s` the kubecfg will be enriched with configuration about the cluster and the full path to the project dir will be used as the context and cluster name.
 
+If you just want to generate a kubeconfig file and distribute it, use this:
+```bash
+$ KUBECONFIG=my-kubeconfig ansinetes -p . -s < /dev/null
+````
+The file `my-kubeconfig` is self-contained and can be distributed.
+
 # Deployment description
 When Vagrant is used 4 VMs are created. This can be changed by editing the vagrant/config.rb script. 3 nodes take part in the etcd quorum while the rest are proxies. There are two api-servers. Controller-manager and Scheduler run with `--leader-elect` option. Components that target the apiserver will talk to the first node from the 'apiservers' group (no HA here). The default `hosts` file describes the role mapping:
 
