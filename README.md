@@ -57,7 +57,7 @@ $ vagrant up
 CoreOS is usually configured using cloud-config but as a dev you are going to iterate faster if you stop/reconfigure/start your services, not the VMs. CoreOS needs to first be made [Ansible-compatible](https://galaxy.ansible.com/defunctzombie/coreos-bootstrap/). Luckily, this can be accomplished within Ansible itself.
 
 ```bash
-[ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/coreos-bootstrap.yml
+[ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/coreos-bootstrap.yaml
 
 PLAY [coreos] ******************************************************************
 TASK [defunctzombie.coreos-bootstrap : Check if bootstrap is needed] ***********
@@ -91,7 +91,7 @@ The ca.pem and ca-key.pem will be used for both etcd and Kubernetes later. The k
 Etcd is essential both to Kubernetes and flannel. Ansinetes will deploy a 3-node cluster with the rest of the nodes working as proxies. This will enable every component to talk to localhost and target the etcd cluster. The cluster is bootstrapped using [static configuration](https://coreos.com/etcd/docs/latest/clustering.html#static).
 
 ```bash
-[ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/etcd-bootstrap.yml
+[ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/etcd-bootstrap.yaml
 
 PLAY [Bootstrap etcd cluster] **************************************************
 TASK [Stop etcd2] **************************************************************
@@ -109,14 +109,14 @@ TASK [daemon-reload] ***********************************************************
 
 Then start and enable the etcd service:
 ```bash
-[ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/etcd-up.yml
+[ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/etcd-up.yaml
 PLAY [Start etcd] **************************************************************
 TASK [start-etcd] **************************************************************
 ```
 
 ## Configure flannel
 ```bash
-[ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/flannel-bootstrap.yml
+[ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/flannel-bootstrap.yaml
 PLAY [Configure and start flannel] *********************************************
 TASK [Stop flanneld] ***********************************************************
 TASK [Configure flannel network in etcd (25.0.0.0/16)] *************************
@@ -136,7 +136,7 @@ of Defense](https://en.wikipedia.org/wiki/LogMeIn_Hamachi#Addressing). Flannel s
 This step is the slowest as it downloads more than a 1G from Github.
 
 ```bash
-[ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/kubernetes-bootstrap.yml
+[ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/kubernetes-bootstrap.yaml
 PLAY [Install kubernetes on all nodes] *****************************************
 TASK [Download kubernetes binaries locally] ************************************
 TASK [Extract binaries] ********************************************************
@@ -165,7 +165,7 @@ TASK [Systemd daemon reload] ***************************************************
 
 Then you need to start the services:
 ```bash
-[ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/kubernetes-up.yml
+[ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/kubernetes-up.yaml
 PLAY [Start kubernetes] ********************************************************
 TASK [Upload systemd unit files] ***********************************************
 TASK [Reload daemon] ***********************************************************
@@ -240,7 +240,7 @@ kbt-3
 
 ```
 
-Systemd units are installed uniformly everywhere but are enabled and started only on the designated nodes. If you change the service to node mapping you need to run `kubernetes-up.yml` and `kubernetes-down.yml` again. Kubelet and Proxy run on every node.
+Systemd units are installed uniformly everywhere but are enabled and started only on the designated nodes. If you change the service to node mapping you need to run `kubernetes-up.yaml` and `kubernetes-down.yaml` again. Kubelet and Proxy run on every node.
 
 Api-server is started with `--authorization-mode=ABAC`. Have a look at the jsonl policy file for details.
 Every component authenticates to the apiserver using a private key under a service account (mapping the CN to the username). The default service account for the kube-system namespace has all privileges.
@@ -248,7 +248,7 @@ Additionally an admin user is created and is used by `kubectl`.
 
 Only three add-ons are deployed: Dashboard, DNS and Heapster. You may want to secure the Dashboard as it has full access to the cluster (on behalf of the kubelete user). For convinience the dashboard is exposed on port 30033. You may change/disable this. The add-ons yamls may be touched a bit to work with the service accounts used to protect the apiserver.
 
-While not technically an add-on an OpenVPN [service](https://github.com/offlinehacker/openvpn-k8s) is also deployed by default. During development it is sometimes very useful to make your workstation part of the Kubernetes service network. When you run the playbook `kubernetes-bootstrap.yml` an openvpn client configuration is re-generated locally. You can then "join" the Kubernetes service network using:
+While not technically an add-on an OpenVPN [service](https://github.com/offlinehacker/openvpn-k8s) is also deployed by default. During development it is sometimes very useful to make your workstation part of the Kubernetes service network. When you run the playbook `kubernetes-bootstrap.yaml` an openvpn client configuration is re-generated locally. You can then "join" the Kubernetes service network using:
 ```bash
 $ sudo openvpn ovpn-client.conf
 Sun Sep 18 22:40:05 2016 OpenVPN 2.3.7 x86_64-pc-linux-gnu [SSL (OpenSSL)] [LZO] [EPOLL] [PKCS11] [MH] [IPv6] built on Jul  8 2015
@@ -271,8 +271,8 @@ OpenVPN can be configured to change the DNS of your machine but it's highly OS-s
 
 
 # Customizing the deployment
-The easiest way to customize the deployment is to edit the `ansible/group_vars/all.yml` file. You can control many options there. If you want to experiment with other Kubernetes config options you can edit the ansible/k8s-config/*.j2 templates. They are borrowed from the [init](https://github.com/Kubernetes/contrib/tree/master/init/systemd) contrib dir. If you find an option worthy of putting in a group var please contribute! The systemd unit files will hardly need to be touched though. The `hosts` can be changed to remap/resize pools allocated to different components.
-An example `all.yml` file is given bellow to
+The easiest way to customize the deployment is to edit the `ansible/group_vars/all.yaml` file. You can control many options there. If you want to experiment with other Kubernetes config options you can edit the ansible/k8s-config/*.j2 templates. They are borrowed from the [init](https://github.com/Kubernetes/contrib/tree/master/init/systemd) contrib dir. If you find an option worthy of putting in a group var please contribute! The systemd unit files will hardly need to be touched though. The `hosts` can be changed to remap/resize pools allocated to different components.
+An example `all.yaml` file is given bellow to
 ```yaml
 kubernetes_install:
   version: v1.3.6
@@ -299,13 +299,13 @@ Ansible must be configured to store facts in json files (the `fact_caching = jso
 Run any of the *-bootstrap playbooks as often as you like. After boostraping you may need to run the *-up or *-down playbooks. Runbooks try to be idempotent and do as little work as possible. The boostrap scripts will cause downtime as they will stop all services unconditionally.
 
 ## Regenerating the CA
-Delete the security/ca.pem file, security/certs/* and run kt-ca-init again. The `etcd-bootstrap.yml` and `Kubernetes-boostrap.yml` need to be run again to distribute the new certificates and keys. By judiciously deleting *.pem file from the `cert` dir you can retrigger key re-generation and redistribution.
+Delete the security/ca.pem file, security/certs/* and run kt-ca-init again. The `etcd-bootstrap.yaml` and `Kubernetes-boostrap.yaml` need to be run again to distribute the new certificates and keys. By judiciously deleting *.pem file from the `cert` dir you can retrigger key re-generation and redistribution.
 
 ## Purging cluster state
-`etcd-bootstrap.yml` will purge etcd state. If you've messed up only Kubernetes, you can run only the `kubernetes-purge.yml` playbook.
+`etcd-bootstrap.yaml` will purge etcd state. If you've messed up only Kubernetes, you can run only the `kubernetes-purge.yaml` playbook.
 
 ## Rotate SSH keys
-Run the playbook `ssh-keys-rotate.yml`. This will prevent ansible from talking to your vms unless you update the `vagrant/user-data` file with the security/new ansible-ssh-key.pub before the next reboot.
+Run the playbook `ssh-keys-rotate.yaml`. This will prevent ansible from talking to your vms unless you update the `vagrant/user-data` file with the security/new ansible-ssh-key.pub before the next reboot.
 
 # Recommended workflow
 This project directory fully captures the cluster config state including the Ansible scripts and Kubernetes customization. You can keep it under source control. You can later change the playbooks and/or the `hosts` file. The `ansinetes` script is guarateed to work with somewhat modified project defaults.
