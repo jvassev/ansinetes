@@ -179,7 +179,7 @@ TASK [Start kubelet and proxy] *************************************************
 ## Access your environment
 Now that your cluser is running in Vagrant it's time to access it. In another shell
 run `ansinetes -p demo -s` (-s for shell). It will start your $SHELL with a modified
-environment, changed $PATH, changed $PS1 and both `kubectl` and `etcdctl` preconfigured:
+environment, changed $PATH, changed $PS1 and both `kubectl` and `etcdctl` preconfigured. The changed prompt contains the project name enclosed in **
 
 ```bash
 $ ./ansinetes -p demo -s
@@ -250,7 +250,7 @@ Only three add-ons are deployed: Dashboard, DNS and Heapster. You may want to se
 
 While not technically an add-on an OpenVPN [service](https://github.com/offlinehacker/openvpn-k8s) is also deployed by default. During development it is sometimes very useful to make your workstation part of the Kubernetes service network. When you run the playbook `kubernetes-bootstrap.yml` an openvpn client configuration is re-generated locally. You can then "join" the Kubernetes service network using:
 ```bash
-sudo openvpn ovpn-client.conf
+$ sudo openvpn ovpn-client.conf
 Sun Sep 18 22:40:05 2016 OpenVPN 2.3.7 x86_64-pc-linux-gnu [SSL (OpenSSL)] [LZO] [EPOLL] [PKCS11] [MH] [IPv6] built on Jul  8 2015
 .....
 Sun Sep 18 22:40:08 2016 /sbin/ip addr add dev tun0 local 10.241.0.6 peer 10.241.0.5
@@ -258,7 +258,7 @@ Sun Sep 18 22:40:08 2016 Initialization Sequence Completed
 ```
 Then, assuming you are running with the default config, you should be able to resolve the kube api-server:
 ```bash
-nslookup kubernetes.default.svc.cluster.local 10.254.0.2
+$ nslookup kubernetes.default.svc.cluster.local 10.254.0.2
 Server:     10.254.0.2
 Address:    10.254.0.2#53
 
