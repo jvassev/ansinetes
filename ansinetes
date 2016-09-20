@@ -75,7 +75,13 @@ readonly SHORT_NAME=$(basename ${ANSINETES_PROJECT})
 
 
 if [ $START_SHELL == 0 ]; then
-  docker run --rm -ti \
+  INTERACTIVE="-ti"
+
+  if [ "$RUN_FILE" != "" ]; then
+    INTERACTIVE=""
+  fi
+
+  docker run --rm $INTERACTIVE \
     -h $(basename ${ANSINETES_PROJECT}) \
     -e OUTER_USER=$(id -u) \
     -e RUN_FILE="$RUN_FILE" \
