@@ -25,7 +25,7 @@ realpath() {
 ######## setup
 START_SHELL=0
 readonly ETCD_VERSION=v2.3.7
-readonly KUBECTL_VERSION=v1.3.6
+readonly KUBECTL_VERSION=v1.3.7
 
 readonly ANSINETES_IMAGE=${ANSINETES_IMAGE:-jvassev/ansinetes}
 
@@ -73,11 +73,11 @@ fi
 
 
 ######## download etcdctl
-if [ ! -f ${ANSINETES_PROJECT}/tmp/etcd-bin/etcdctl ]; then
+if [ ! -f ${ANSINETES_PROJECT}/tmp/local-bin/etcdctl ]; then
   log Installing etcdctl locally...
 
-  mkdir -p ${ANSINETES_PROJECT}/tmp/etcd-bin &> /dev/null || true
-  pushd ${ANSINETES_PROJECT}/tmp/etcd-bin &> /dev/null
+  mkdir -p ${ANSINETES_PROJECT}/tmp/local-bin &> /dev/null || true
+  pushd ${ANSINETES_PROJECT}/tmp/local-bin &> /dev/null
 
   if [ "$(uname)" == "Darwin" ]; then
     curl -L -# https://github.com/coreos/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-darwin-amd64.zip -o ${ANSINETES_PROJECT}/tmp/etcd.zip
@@ -88,7 +88,7 @@ if [ ! -f ${ANSINETES_PROJECT}/tmp/etcd-bin/etcdctl ]; then
   else
     curl -L -# https://github.com/coreos/etcd/releases/download/${ETCD_VERSION}/etcd-${ETCD_VERSION}-linux-amd64.tar.gz -o ${ANSINETES_PROJECT}/tmp/etcd.tar.gz
     tar xzf ${ANSINETES_PROJECT}/tmp/etcd.tar.gz --strip-components=1 &> /dev/null
-    rm -fr ${ANSINETES_PROJECT}/tmp/etcd-bin/Documentation ${ANSINETES_PROJECT}/tmp/etcd-bin/etcd &> /dev/null
+    rm -fr ${ANSINETES_PROJECT}/tmp/local-bin/Documentation ${ANSINETES_PROJECT}/tmp/local-bin/etcd &> /dev/null
   fi
 
   popd &> /dev/null
@@ -96,15 +96,20 @@ fi
 
 
 ####### download kubectl only for mac
-if [ "$(uname)" == "Darwin" ]; then
-  if [ ! -f ${ANSINETES_PROJECT}/tmp/kubectl-bin/kubectl ]; then
-    log Installing kubectl locally...
-    mkdir -p ${ANSINETES_PROJECT}/tmp/kubectl-bin &> /dev/null || true
-    pushd ${ANSINETES_PROJECT}/tmp/kubectl-bin &> /dev/null
+if [ ! -f ${ANSINETES_PROJECT}/tmp/local-bin/kubectl ]; then
+  log Installing kubectl locally...
+  mkdir -p ${ANSINETES_PROJECT}/tmp/local-bin &> /dev/null || true
+  pushd ${ANSINETES_PROJECT}/tmp/local-bin &> /dev/null
+
+  if [ "$(uname)" == "Darwin" ]; then
     curl -L -#  -O https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/darwin/amd64/kubectl
     chmod +x kubectl
-    popd &> /dev/null
+  else
+    curl -L -#  -O https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
+    chmod +x kubectl
   fi
+
+  popd &> /dev/null
 fi
 
 ######## configure kubectl
@@ -124,7 +129,7 @@ else
  "uknown"
 end' ${FACT_FILES} -r)
 
-PATH=${ANSINETES_PROJECT}/tmp/kubectl-bin:${ANSINETES_PROJECT}/tmp/k8s-bin:$PATH
+PATH=${ANSINETES_PROJECT}/tmp/local-bin:$PATH
 kubectl config set-cluster ${ANSINETES_PROJECT} \
   --server=https://${RANDOM_MASTER_IP}:6443 \
   --embed-certs=true \
@@ -156,7 +161,7 @@ export ETCDCTL_CA_FILE=${ANSINETES_PROJECT}/security/ca.pem
 export ETCDCTL_CERT_FILE=${ANSINETES_PROJECT}/security/certs/etcd-client.pem
 export ETCDCTL_KEY_FILE=${ANSINETES_PROJECT}/security/certs/etcd-client-key.pem
 
-export PATH=${ANSINETES_PROJECT}/tmp/kubectl-bin:${ANSINETES_PROJECT}/tmp/etcd-bin:${ANSINETES_PROJECT}/tmp/k8s-bin:\$PATH
+export PATH=${ANSINETES_PROJECT}/tmp/local-bin:\$PATH
 export PS1="\${PS1}[${cyan}*${SHORT_NAME}*${no_color}] "
 
 kubectl config use-context ${ANSINETES_PROJECT} &> /dev/null
