@@ -14,7 +14,13 @@ log() {
 }
 
 usage() {
-  echo TODO
+  cat >&2 << EOF
+Usage: ansinetes ARGS
+    -p, --project DIR        interactive shell into directory
+    -s, --shell              starts bash with kubectl and etcdctl configured
+    -f, --file SCRIPT        like -s but feeds SCRIPT to bash (when there is no tty)
+    -h, --help               shows this screen
+EOF
 }
 
 realpath() {
@@ -24,6 +30,7 @@ realpath() {
 
 ######## setup
 START_SHELL=0
+RUN_FILE=""
 readonly ETCD_VERSION=v2.3.7
 readonly KUBECTL_VERSION=v1.3.7
 
@@ -44,6 +51,11 @@ while [[ $# -gt 0 ]]; do
     ;;
     -s|--shell)
       START_SHELL=1
+    ;;
+    -f|--file)
+      RUN_FILE="$2"
+      START_SHELL=1
+      shift
     ;;
     *)
     die Unknown param $key
@@ -170,4 +182,4 @@ source <(kubectl completion bash)
 echo Welcome to ansinetes virtual environment \"${ANSINETES_PROJECT}\"
 EOF
 
-bash --rcfile ${bash_cfg}
+bash --rcfile ${bash_cfg} $RUN_FILE
