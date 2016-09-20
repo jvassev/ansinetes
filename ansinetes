@@ -166,6 +166,9 @@ kubectl config set-context ${ANSINETES_PROJECT} \
   --cluster=${ANSINETES_PROJECT} \
   --user=${ANSINETES_PROJECT}_admin > /dev/null
 
+kubectl config use-context ${ANSINETES_PROJECT} > /dev/null
+
+
 ######## prepare bash env
 readonly bash_cfg=$(mktemp)
 readonly cyan="\[\033[0;36m\]"
