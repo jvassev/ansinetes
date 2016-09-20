@@ -15,7 +15,7 @@ if [ "$USER" != "ansinetes" ]; then
   if [ "$RUN_FILE" == "" ]; then
     exec su ansinetes -l
   else
-    exec su ansinetes $RUN_FILE
+    exec su ansinetes bash $RUN_FILE
   fi
 fi
 
