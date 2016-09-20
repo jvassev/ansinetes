@@ -149,6 +149,11 @@ else
  "uknown"
 end' ${FACT_FILES} -r)
 
+if [ "${KUBECONFIG:-}" == "" ]; then
+  # don't touch user's config unless told so
+  export KUBECONFIG=$(mktemp)
+fi
+
 PATH=${ANSINETES_PROJECT}/tmp/local-bin:$PATH
 kubectl config set-cluster ${ANSINETES_PROJECT} \
   --server=https://${RANDOM_MASTER_IP}:6443 \
@@ -156,7 +161,7 @@ kubectl config set-cluster ${ANSINETES_PROJECT} \
   --certificate-authority=${ANSINETES_PROJECT}/security/ca.pem \
   > /dev/null
 
-kubectl config set-credentials ${ANSINETES_PROJECT}_admin \
+kubectl config set-credentials admin@${ANSINETES_PROJECT} \
   --client-key=${ANSINETES_PROJECT}/security/certs/admin-key.pem \
   --client-certificate=${ANSINETES_PROJECT}/security/certs/admin.pem \
   --embed-certs=true \
@@ -164,7 +169,7 @@ kubectl config set-credentials ${ANSINETES_PROJECT}_admin \
 
 kubectl config set-context ${ANSINETES_PROJECT} \
   --cluster=${ANSINETES_PROJECT} \
-  --user=${ANSINETES_PROJECT}_admin > /dev/null
+  --user=admin@${ANSINETES_PROJECT} > /dev/null
 
 kubectl config use-context ${ANSINETES_PROJECT} > /dev/null
 
