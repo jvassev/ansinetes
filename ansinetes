@@ -16,10 +16,12 @@ log() {
 usage() {
   cat >&2 << EOF
 Usage: ansinetes ARGS
-    -p, --project DIR        interactive shell into directory
-    -s, --shell              starts bash with kubectl and etcdctl configured
-    -f, --file SCRIPT        like -s but feeds SCRIPT to bash (when there is no tty)
-    -h, --help               shows this screen
+    -p, --project DIR        Interactive shell into project directory
+    -s, --shell              Starts bash with kubectl and etcdctl configured
+    -f, --file SCRIPT        Feeds SCRIPT to bash (with -s specified) or run
+                                 it inside the container. Make sure  path is
+                                 correct within container.
+    -h, --help               Shows this screen.
 EOF
 }
 
@@ -54,7 +56,6 @@ while [[ $# -gt 0 ]]; do
     ;;
     -f|--file)
       RUN_FILE="$2"
-      START_SHELL=1
       shift
     ;;
     *)
@@ -77,6 +78,7 @@ if [ $START_SHELL == 0 ]; then
   docker run --rm -ti \
     -h $(basename ${ANSINETES_PROJECT}) \
     -e OUTER_USER=$(id -u) \
+    -e RUN_FILE="$RUN_FILE" \
     -v ${ANSINETES_PROJECT}/tmp:/tmp/ansible \
     -v ${ANSINETES_PROJECT}:/ansinetes \
     ${ANSINETES_IMAGE}

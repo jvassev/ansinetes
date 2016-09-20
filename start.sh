@@ -12,7 +12,11 @@ if [ "$USER" != "ansinetes" ]; then
   mkdir /ansinetes &> /dev/null
   chown ansinetes. /ansinetes
   chown ansinetes. /tmp/ansible
-  exec su ansinetes -l
+  if [ "$RUN_FILE" == "" ]; then
+    exec su ansinetes -l
+  else
+    exec su ansinetes $RUN_FILE
+  fi
 fi
 
 export PATH=$PATH:/ansinetes/bin
