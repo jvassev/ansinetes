@@ -26,6 +26,10 @@ kbt-1
 kbt-2
 kbt-3
 
+[ingress-edges]
+kbt-2
+kbt-4
+
 [coreos:vars]
 ansible_python_interpreter="/home/core/bin/python"
 ansible_user=core

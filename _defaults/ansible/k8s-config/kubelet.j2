@@ -22,7 +22,10 @@ KUBELET_API_SERVER="--api-servers={{url}}"
 
 {%set node_labels = "--node-labels=ansible_hostname=" + inventory_hostname -%}
 {%if ansible_local.vmware.moid -%}
-  {%set  node_labels = node_labels + ',vm-id=' + ansible_local.vmware.moid %}
+  {%set node_labels = node_labels + ',vm-id=' + ansible_local.vmware.moid %}
+{%endif -%}
+{%if inventory_hostname in groups['ingress-edges'] -%}
+  {%set node_labels = node_labels + ',role=nginx-ingress' -%}
 {%endif -%}
 
 # Add your own!

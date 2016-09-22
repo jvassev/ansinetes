@@ -272,34 +272,46 @@ Non-authoritative answer:
 Name:   kubernetes.default.svc.cluster.local
 Address: 10.254.0.1
 ```
+When the OpenVPN bridge is opened you can target the pod themselves. This is not something you would do in production but is worth having around when troubleshooting.
 
 OpenVPN can be configured to change the DNS of your machine but it's highly OS-specific and it's not done.
 
+For demo purposes an nginx-ingress controller runs on two nodes. You can change this by adding/removing hosts to the `ingress-edges` group in the `hosts` file.
 
 # Customizing the deployment
 The easiest way to customize the deployment is to edit the `ansible/group_vars/all.yaml` file. You can control many options there. If you want to experiment with other Kubernetes config options you can edit the ansible/k8s-config/*.j2 templates. They are borrowed from the [init](https://github.com/Kubernetes/contrib/tree/master/init/systemd) contrib dir. If you find an option worthy of putting in a group var please contribute! The systemd unit files will hardly need to be touched though. The `hosts` can be changed to remap/resize pools allocated to different components.
 An example `all.yaml` file is given bellow to
 ```yaml
 kubernetes_install:
-  version: v1.3.6
-  sha256: sha256:2db7ace2f72a2e162329a6dc969a5a158bb8c5d0f8054c5b1b2b1063aa22020d
+  version: v1.3.7
+  sha256: sha256:ad18566a09ff87b36107c2ea238fa5e20988d7a62c85df9c8598920679fec4a1
 
 flannel:
   network: "25.0.0.0/16"
 
 kubernetes_cluster_ip_range: "10.254.0.0/16"
 
+kubernetes_apiserver_ip: "10.254.0.1"
+
+kubernetes_service_port_range: "30000-32767"
+
 kubernetes_dns:
   ip: "10.254.0.2"
-  replicas: 1
+  replicas: 2
   domain: "cluster.local"
+
+ovpn:
+  replicas: 2
+  network: "10.241.0.0"
+  mask: "255.255.0.0"
+  node_port: 30044
 
 kubernetes_etcd_prefix: /registry
 
-kubernetes_dashboard_port: 30033
+public_iface: ansible_eth1
 ```
 
-Ansible must be configured to store facts in json files (the `fact_caching = jsonfile` setting). Facts are used later by the ansinetes script. If you expect facts to change just delete this directory and it will be populated next time a runbook is played.
+Ansible must be configured to store facts in json files (the `fact_caching = jsonfile` setting). Facts are later used by the ansinetes script. If you expect facts to change just delete this directory and it will be populated next time a runbook is played.
 
 # Starting over
 Run any of the *-bootstrap playbooks as often as you like. After boostraping you may need to run the *-up or *-down playbooks. Runbooks try to be idempotent and do as little work as possible. The boostrap scripts will cause downtime as they will stop all services unconditionally.

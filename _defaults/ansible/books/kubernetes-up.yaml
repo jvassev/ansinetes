@@ -40,6 +40,7 @@
         - ovpn-secrets.yaml
         - ovpn-controller.yaml
         - ovpn-service.yaml
+        - nginx-ingress.yaml
 
 
 

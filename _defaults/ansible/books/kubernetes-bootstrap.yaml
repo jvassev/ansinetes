@@ -300,6 +300,7 @@
         - ovpn-secrets.yaml
         - ovpn-controller.yaml
         - ovpn-service.yaml
+        - nginx-ingress.yaml
 
     - name: Systemd daemon reload
       command: systemctl daemon-reload
