@@ -3,7 +3,10 @@ nobind
 dev tun
 proto tcp
 
-remote {{hostvars[play_hosts[0]][public_iface].ipv4.address}} {{ovpn.node_port}} tcp
+remote-random
+{%for node in groups.all -%}
+remote {{hostvars[node][public_iface].ipv4.address}} {{ovpn.node_port}} tcp
+{%endfor -%}
 
 <ca>
 {{ lookup('file', '/ansinetes/security/ca.pem')}}
