@@ -34,7 +34,7 @@ realpath() {
 START_SHELL=0
 RUN_FILE=""
 readonly ETCD_VERSION=v2.3.7
-readonly KUBECTL_VERSION=v1.3.7
+readonly KUBECTL_VERSION=v1.4.0
 
 readonly ANSINETES_IMAGE=${ANSINETES_IMAGE:-jvassev/ansinetes}
 
@@ -49,7 +49,7 @@ while [[ $# -gt 0 ]]; do
     ;;
     -p|--project)
       ANSINETES_PROJECT="$2"
-      shift # past argument
+      shift
     ;;
     -s|--shell)
       START_SHELL=1
@@ -135,7 +135,7 @@ fi
 ######## configure kubectl
 # get a random IP of a node of a cluster
 # get up to 3 nodes from the apiservers group skipping empty lines
-FACT_FILES=$(sed -n '/\[apiservers\]/{n;p;n;p;n;p;}' ${ANSINETES_PROJECT}/ansible/hosts | grep . | head -n 1)
+FACT_FILES=$(sed -n '/\[apiservers\]/{n;p;n;p;n;p;}' ${ANSINETES_PROJECT}/ansible/hosts | grep . | grep -v '^\s*#' | head -n 1)
 # build path to fact file
 FACT_FILES=${ANSINETES_PROJECT}/tmp/facts/${FACT_FILES}
 

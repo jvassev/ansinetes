@@ -13,4 +13,4 @@ tar vxzf $TGZ kubernetes/server/kubernetes-server-linux-amd64.tar.gz --strip-com
 
 tar vxzf kubernetes-server-linux-amd64.tar.gz  kubernetes/server/bin
 
-mv -v kubernetes/server/bin/{kube-scheduler,kube-proxy,kubelet,kube-dns,kubectl,kube-controller-manager,kube-apiserver,hyperkube,federation-controller-manager,federation-apiserver} ${K8S_DIR}
+mv -v kubernetes/server/bin/{kube-scheduler,kube-proxy,kubelet,kube-dns,kubectl,kube-controller-manager,kube-apiserver,hyperkube} ${K8S_DIR}
