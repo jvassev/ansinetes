@@ -34,6 +34,7 @@
         - kubelet.service
         - kube-proxy.service
         - kube-scheduler.service
+        - apiserver-lb.service
       ignore_errors: yes
 
     - name: Create kube user
@@ -73,6 +74,7 @@
         - /etc/kubernetes/kubelet
         - /etc/kubernetes/kube-scheduler
         - /etc/kubernetes/kube-controller-manager
+        - /etc/haproxy
 
     - name: Upload kubernetes binaries
       copy:
@@ -108,11 +110,12 @@
         - kube-proxy.service
         - kube-scheduler.service
 
-    - name: Create apiserver certificates for every node
-      command: "kt-server-cert-create -h {{kubernetes_apiserver_ip}},localhost,127.0.0.1,{%for a in ansible_all_ipv4_addresses%}{{a}}{%if not loop.last%},{%endif%}{%endfor%} {{inventory_hostname}}-kube-apiserver-server"
+    - name: Create apiserver certificate
+      command: "kt-server-cert-create -h {{kubernetes_apiserver_ip}},localhost,127.0.0.1,{%for name in groups.apiservers%}{{hostvars[name][public_iface].ipv4.address}}{%if not loop.last%},{%endif%}{%endfor%} kube-apiserver-server"
       delegate_to: localhost
+      when: inventory_hostname == play_hosts[0]
       args:
-        creates: /ansinetes/security/certs/{{inventory_hostname}}-kube-apiserver-server.pem
+        creates: /ansinetes/security/certs/kube-apiserver-server.pem
       become: False
 
     - name: Upload ca file
@@ -128,9 +131,9 @@
         dest: /etc/kubernetes/kube-apiserver/{{item.dest}}
         owner: root
       with_items:
-        - src: "{{inventory_hostname}}-kube-apiserver-server.pem"
+        - src: "kube-apiserver-server.pem"
           dest: server.pem
-        - src: "{{inventory_hostname}}-kube-apiserver-server-key.pem"
+        - src: "kube-apiserver-server-key.pem"
           dest: server-key.pem
 
     - name: Create client certificates
@@ -285,6 +288,18 @@
       args:
         src: /etc/ansible/k8s-config/addons/ovpn-client.conf.j2
         dest: /ansinetes/ovpn-client.conf
+
+    - name: Configure ha-proxy
+      template:
+      args:
+        src: /etc/ansible/ha-config/apiserver.cfg.j2
+        dest: /etc/haproxy/apiserver.cfg
+
+    - name: Upload haproxy systemd unit
+      copy:
+      args:
+        src: /etc/ansible/ha-config/apiserver-lb.service
+        dest: /etc/systemd/system/apiserver-lb.service
 
     - name: Render cluster add-ons
       template:

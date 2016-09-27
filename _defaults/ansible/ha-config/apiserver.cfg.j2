@@ -1,0 +1,22 @@
+global
+	log /dev/log local0 info
+
+frontend fe_api
+	bind *:6443
+	mode tcp
+	timeout client 3600s
+	backlog 4096
+	maxconn 5000
+	default_backend be_api
+
+backend be_api
+	mode tcp
+	option log-health-checks
+	option redispatch
+	balance roundrobin
+	{%for name in groups.apiservers -%}
+	server {{name}} {{hostvars[name][public_iface].ipv4.address}}:6442
+	{%endfor-%}
+	timeout connect 10s
+	timeout queue 50s
+	timeout server 3600s

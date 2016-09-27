@@ -7,11 +7,10 @@
 {%set ipv4address = vars[public_iface].ipv4.address -%}
 
 # The address on the local server to listen to.
-KUBE_API_ADDRESS="--insecure-bind-address=127.0.0.1"
+KUBE_API_ADDRESS="--bind-address=0.0.0.0"
 
 # The port on the local server to listen on.
-KUBE_API_PORT="--insecure-port=8080"
-
+KUBE_API_PORT="--secure-port=6442"
 
 # Comma separated list of nodes in the etcd cluster
 KUBE_ETCD_SERVERS="\

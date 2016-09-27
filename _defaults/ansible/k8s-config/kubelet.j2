@@ -3,10 +3,6 @@
 # http://kubernetes.io/docs/admin/kubelet/
 
 {%set ipv4address = vars[public_iface].ipv4.address -%}
-{%set url  -%}
-{%for name in groups.apiservers -%}
-https://{{hostvars[name][public_iface].ipv4.address}}:6443{%if not loop.last%},{%endif%}{%endfor -%}
-{%endset%}
 
 # The address for the info server to serve on (set to 0.0.0.0 or "" for all interfaces)
 KUBELET_ADDRESS="--address=0.0.0.0"
@@ -18,7 +14,7 @@ KUBELET_PORT="--port=10250"
 KUBELET_HOSTNAME="--hostname-override={{ipv4address}}"
 
 # location of the api-server
-KUBELET_API_SERVER="--api-servers={{url}}"
+KUBELET_API_SERVER="--api-servers=https://localhost:6443"
 
 {%set node_labels = "--node-labels=ansible_hostname=" + inventory_hostname -%}
 {%if ansible_local.vmware.moid -%}

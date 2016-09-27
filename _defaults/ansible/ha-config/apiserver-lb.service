@@ -1,0 +1,23 @@
+[Unit]
+Description=HA-Proxy in front Kubernetes API Server
+Documentation=https://hub.docker.com/_/haproxy/
+After=docker.service
+
+[Service]
+
+ExecStart=/usr/bin/rkt \
+	--insecure-options=image \
+	--volume config,kind=host,source=/etc/haproxy/apiserver.cfg,readOnly=true \
+	--mount volume=config,target=/usr/local/etc/haproxy/haproxy.cfg \
+	--net=host \
+	--volume log,kind=host,source=/dev/log \
+	--mount volume=log,target=/dev/log \
+	run \
+	docker://haproxy:1.5-alpine
+
+Restart=on-failure
+Type=notify
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

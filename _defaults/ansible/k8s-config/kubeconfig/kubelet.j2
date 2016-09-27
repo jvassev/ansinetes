@@ -1,11 +1,10 @@
-{%set ipv4address = vars[public_iface].ipv4.address -%}
 ---
 apiVersion: v1
 kind: Config
 clusters:
   - cluster:
       certificate-authority: /etc/kubernetes/ca.pem
-      server: https://{{ipv4address}}:6443
+      server: https://localhost:6443
     name: kubernetes
 contexts:
   - context:

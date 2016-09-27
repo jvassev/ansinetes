@@ -22,11 +22,12 @@
         - state: "{%if inventory_hostname in groups['controller-managers']%}started{%else%}stopped{%endif%}"
           enabled: "{%if inventory_hostname in groups['controller-managers']%}yes{%else%}no{%endif%}"
 
-    - name: Start kubelet and proxy
+    - name: Start kubelet, proxy and apiserver-lb
       service: name={{item}} state=started enabled=yes
       with_items:
         - kubelet.service
         - kube-proxy.service
+        - apiserver-lb.service
 
     - name: Start add-ons
       shell: "/opt/kubernetes/bin/kubectl {{kubectl_params}} create -f /etc/kubernetes/addons/{{item}} || echo Maybe already started"

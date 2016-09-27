@@ -1,5 +1,4 @@
 tmp/
 ans_tmp/
 ans_sec/
-*.retry
-
+_defaults/ansible/books/*.retry
