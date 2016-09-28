@@ -2,13 +2,14 @@
 Why is that every "Kubernetes getting started" guide takes tens of manuals steps? There has to be a simpler way.
 
 Ansinetes (Ansible + Kubernetes) is a single command that lets you build multi-node high-availability clusters on CoreOS (on Vagrant or in your datacenter).
-Ansinetes may not exhibit Ansible best practices but is a good starting point to (re)create non-trivial clusters with complex configuration easily.
+Ansinetes may not exhibit Ansible best practices but is a good starting point to (re)create non-trivial clusters with complex configuration easily. Also it maps every step to an easily hackable playbook for you to customize
 
 It has already taken some decisions for you:
 * Uses CoreOS
 * Installs Kubernetes from the binary relase on Github
-* Uses flannel for the pod/overlay network
+* Uses flannel for the pod overlay network
 * Configures TLS everywhere possible
+* Runs the control plane in HA mode
 
 # Prerequisites
 * Linux or Mac
@@ -60,16 +61,7 @@ CoreOS is usually configured using cloud-config but as a dev you are going to it
 [ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/coreos-bootstrap.yaml
 
 PLAY [coreos] ******************************************************************
-TASK [defunctzombie.coreos-bootstrap : Check if bootstrap is needed] ***********
-TASK [defunctzombie.coreos-bootstrap : Run bootstrap.sh] ***********************
-TASK [defunctzombie.coreos-bootstrap : Check if we need to install pip] ********
-TASK [defunctzombie.coreos-bootstrap : Copy get-pip.py] ************************
-TASK [defunctzombie.coreos-bootstrap : Install pip] ****************************
-TASK [defunctzombie.coreos-bootstrap : Remove get-pip.py] **********************
-TASK [defunctzombie.coreos-bootstrap : Install pip launcher] *******************
-TASK [Ensure custom facts directory exists] ************************************
-TASK [Install vmware custom facts] *********************************************
-TASK [Collect facts] ***********************************************************
+...
 ```
 
 ## Create a CA
@@ -92,41 +84,22 @@ Etcd is essential both to Kubernetes and flannel. Ansinetes will deploy a 3-node
 
 ```bash
 [ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/etcd-bootstrap.yaml
-
 PLAY [Bootstrap etcd cluster] **************************************************
-TASK [Stop etcd2] **************************************************************
-TASK [Purge etcd data] *********************************************************
-TASK [Create ssl dir] **********************************************************
-TASK [Create server certificate for client endpoint] ***************************
-TASK [Create server certificate for peer endpoint] *****************************
-TASK [Create client certificate] ***********************************************
-TASK [Upload ssl certificates and keys] ****************************************
-TASK [Create drop-in dir] ******************************************************
-TASK [Upload config file to /etc/systemd/system/etcd2.service.d/30-ansible] ****
-TASK [Upload config file to /etc/etcd2/env] ************************************
-TASK [daemon-reload] ***********************************************************
+...
 ```
 
 Then start and enable the etcd service:
 ```bash
 [ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/etcd-up.yaml
 PLAY [Start etcd] **************************************************************
-TASK [start-etcd] **************************************************************
+...
 ```
 
 ## Configure flannel
 ```bash
 [ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/flannel-bootstrap.yaml
 PLAY [Configure and start flannel] *********************************************
-TASK [Stop flanneld] ***********************************************************
-TASK [Configure flannel network in etcd (25.0.0.0/16)] *************************
-TASK [Create flannel drop-in dir] **********************************************
-TASK [Create flannel config dir (for older flannels running in docker)] ********
-TASK [Upload flannel config file] **********************************************
-TASK [Upload flannel config file (for older flannels running in docker)] *******
-TASK [daemon-reload] ***********************************************************
-TASK [Start flanneld] **********************************************************
-TASK [Restart docker] **********************************************************
+...
 ```
 The overlay network is 25.0.0.0/16 so it can easily be distinguished from other 10.*
 networks lying around. That's fine unless you are going to communicate with the [British Ministry
@@ -138,42 +111,14 @@ This step is the slowest as it downloads more than a 1G from Github.
 ```bash
 [ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/kubernetes-bootstrap.yaml
 PLAY [Install kubernetes on all nodes] *****************************************
-TASK [Download kubernetes binaries locally] ************************************
-TASK [Extract binaries] ********************************************************
-TASK [Stop services] ***********************************************************
-TASK [Create kube user] ********************************************************
-TASK [Create kube user dirs] ***************************************************
-TASK [Create kubernetes dirs] **************************************************
-TASK [Upload kubernetes binaries] **********************************************
-TASK [Upload jsonl policy] *****************************************************
-TASK [Upload systemd unit files] ***********************************************
-TASK [Create apiserver certificates for every node] ****************************
-TASK [Upload ca file] **********************************************************
-TASK [Upload apiserver certificates] *******************************************
-TASK [Create client certificates] **********************************************
-TASK [Upload kube-proxy client certificates] ***********************************
-TASK [Upload kubelet client certificates] **************************************
-TASK [Upload scheduler client certificates] ************************************
-TASK [Upload controller-manager client certificates] ***************************
-TASK [Create service account keys] *********************************************
-TASK [Upload service account keys] *********************************************
-TASK [Render kubecfg's] ********************************************************
-TASK [Render kubernetes .env files] ********************************************
-TASK [Render cluster add-ons] **************************************************
-TASK [Systemd daemon reload] ***************************************************
+...
 ```
 
 Then you need to start the services:
 ```bash
 [ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/kubernetes-up.yaml
 PLAY [Start kubernetes] ********************************************************
-TASK [Upload systemd unit files] ***********************************************
-TASK [Reload daemon] ***********************************************************
-TASK [Stop all services] *******************************************************
-TASK [Start apiservers] ********************************************************
-TASK [Start schedulers] ********************************************************
-TASK [Start controller-managers] ***********************************************
-TASK [Start kubelet and proxy] *************************************************
+...
 ```
 
 ## Access your environment
@@ -251,6 +196,8 @@ Systemd units are installed uniformly everywhere but are enabled and started onl
 Api-server is started with `--authorization-mode=ABAC`. Have a look at the jsonl policy file for details.
 Every component authenticates to the apiserver using a private key under a service account (mapping the CN to the username). The default service account for the kube-system namespace has all privileges.
 Additionally an `admin` user is created and is used by `kubectl`. There is also username/password authentication configured for the admin user with default password `pass123`. You can change it or add other users to the file `token.csv` before bootstrapping the cluster.
+
+Thre can be many api-servers running at the same time. They run by default on the secure port 6442. On every node a ha-proxy is run (on 6443) that load balances between the available api-server. As a results kubelte go to https://localhost:6443 to locate the apiserver and you can scale up/down the number of api-servers.
 
 Only three add-ons are deployed: Dashboard, DNS and Heapster. The add-ons yamls may be touched a bit.
 
