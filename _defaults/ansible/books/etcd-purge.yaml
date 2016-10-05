@@ -1,0 +1,11 @@
+---
+- name: Purge etcd data
+
+  hosts: all
+
+  tasks:
+    - name: Stop etcd2
+      service: name=etcd2 state=stopped
+
+    - name: Purge etcd data
+      shell: "rm -frv /var/lib/etcd2/*"

@@ -15,7 +15,6 @@ It has already taken some decisions for you:
 * Linux or Mac
 * Docker running locally (there will be volumes being host-mounted)
 * Vagrant (only if you're going to use it)
-* jq [installed](https://stedolan.github.io/jq/)
 
 # Install
 ```bash

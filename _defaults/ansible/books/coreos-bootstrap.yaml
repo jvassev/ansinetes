@@ -1,6 +1,8 @@
 ---
 - hosts: coreos
+
   gather_facts: False
+
   roles:
     - vmware.coreos-bootstrap
 
@@ -13,6 +15,7 @@
 
     - name: Collect facts
       setup:
+
     - name: Enable ntpd
       service:
         name: systemd-timesyncd

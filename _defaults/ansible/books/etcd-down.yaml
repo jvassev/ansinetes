@@ -1,9 +1,8 @@
 ---
-- name: Delete etcd cluster state
+- name: Stop etcd
 
   hosts: all
 
   tasks:
     - name: Stop etcd2
       service: name=etcd2 state=stopped
-

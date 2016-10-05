@@ -1,15 +1,9 @@
 ---
-- name: Bootstrap etcd cluster
+- name: Configure and start etcd
 
   hosts: all
 
   tasks:
-    - name: Stop etcd2
-      service: name=etcd2 state=stopped enabled=yes
-
-    - name: Purge etcd data
-      shell: "rm -frv /var/lib/etcd2/*"
-
     - name: Create ssl dir
       file: state=directory path=/etc/ssl/etcd/
 
@@ -67,3 +61,6 @@
 
     - name: daemon-reload
       command: systemctl daemon-reload
+
+    - name: start-etcd
+      service: name=etcd2 enabled=yes state=started

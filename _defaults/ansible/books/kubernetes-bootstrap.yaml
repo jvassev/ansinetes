@@ -3,6 +3,31 @@
 
   hosts: all
 
+  handlers:
+    - name: restart-apiserver
+      service: name=kube-apiserver state=restarted enabled=yes
+      when: inventory_hostname in groups['apiservers'] and not apiserver_needs_restart.changed
+
+    - name: restart-apiserver-lb
+      service: name=apiserver-lb state=restarted enabled=yes
+      when: not apiserver_lb_needs_restart.changed
+
+    - name: restart-scheduler
+      service: name=kube-scheduler state=restarted enabled=yes
+      when: inventory_hostname in groups['schedulers'] and not scheduler_needs_restart.changed
+
+    - name: restart-proxy
+      service: name=kube-proxy state=restarted enabled=yes
+      when: not proxy_needs_restart.changed
+
+    - name: restart-kubelet
+      service: name=kubelet state=restarted enabled=yes
+      when: not kubelet_needs_restart.changed
+
+    - name: restart-controller-manager
+      service: name=kube-controller-manager state=restarted enabled=yes
+      when: inventory_hostname in groups['controller-managers'] and not controller_needs_restart.changed
+
   tasks:
     - name: Download kubernetes binaries locally
       get_url:
@@ -22,20 +47,6 @@
       when: inventory_hostname == play_hosts[0]
       delegate_to: localhost
       become: False
-
-    - name: Stop services
-      service:
-      args:
-        name: "{{item}}"
-        state: stopped
-      with_items:
-        - kube-apiserver.service
-        - kube-controller-manager.service
-        - kubelet.service
-        - kube-proxy.service
-        - kube-scheduler.service
-        - apiserver-lb.service
-      ignore_errors: yes
 
     - name: Create kube user
       user:
@@ -90,12 +101,20 @@
         - kubectl
         - kube-controller-manager
         - kube-apiserver
+      notify:
+        - restart-scheduler
+        - restart-proxy
+        - restart-kubelet
+        - restart-controller-manager
+        - restart-apiserver
 
     - name: Upload jsonl policy
       copy:
       args:
         src: /etc/ansible/k8s-config/policy.jsonl
         dest: /etc/kubernetes/kube-apiserver/policy.jsonl
+      notify:
+        - restart-apiserver
 
     - name: Upload systemd unit files
       copy:
@@ -104,11 +123,17 @@
         dest: /etc/systemd/system/{{item}}
         owner: root
       with_items:
-        - kube-apiserver.service
-        - kube-controller-manager.service
-        - kubelet.service
-        - kube-proxy.service
         - kube-scheduler.service
+        - kube-proxy.service
+        - kubelet.service
+        - kube-controller-manager.service
+        - kube-apiserver.service
+      notify:
+        - restart-scheduler
+        - restart-proxy
+        - restart-kubelet
+        - restart-controller-manager
+        - restart-apiserver
 
     - name: Create apiserver certificate
       command: "kt-server-cert-create -h {{kubernetes_apiserver_ip}},localhost,127.0.0.1,{%for name in groups.apiservers%}{{hostvars[name][public_iface].ipv4.address}}{%if not loop.last%},{%endif%}{%endfor%} kube-apiserver-server"
@@ -135,6 +160,8 @@
           dest: server.pem
         - src: "kube-apiserver-server-key.pem"
           dest: server-key.pem
+      notify:
+        - restart-apiserver
 
     - name: Create client certificates
       command: "kt-client-cert-create {{item}}"
@@ -160,6 +187,8 @@
           dest: client.pem
         - src: proxy-key.pem
           dest: client-key.pem
+      notify:
+        - restart-proxy
 
     - name: Upload kubelet client certificates
       copy:
@@ -171,6 +200,9 @@
           dest: client.pem
         - src: kubelet-key.pem
           dest: client-key.pem
+      notify:
+        - restart-kubelet
+
 
     - name: Upload scheduler client certificates
       copy:
@@ -182,6 +214,8 @@
           dest: client.pem
         - src: scheduler-key.pem
           dest: client-key.pem
+      notify:
+        - restart-scheduler
 
     - name: Upload controller-manager client certificates
       copy:
@@ -193,6 +227,8 @@
           dest: client.pem
         - src: controller-manager-key.pem
           dest: client-key.pem
+      notify:
+        - restart-controller-manager
 
     - name: Create service account keys
       command: "kt-client-cert-create sa"
@@ -212,12 +248,17 @@
           dest: /etc/kubernetes/kube-apiserver/sa.pem
         - src: /ansinetes/security/certs/sa-key.pem
           dest: /etc/kubernetes/kube-controller-manager/sa-key.pem
+      notify:
+        - restart-controller-manager
+        - restart-apiserver
 
     - name: Upload token.csv
       copy:
       args:
         src: /etc/ansible/k8s-config/token.csv
         dest: /etc/kubernetes/token.csv
+      notify:
+        - restart-apiserver
 
     - name: Render kubecfg's
       template:
@@ -233,19 +274,75 @@
           dest: kube-scheduler/config
         - src: controller-manager.j2
           dest: kube-controller-manager/config
+      notify:
+        - restart-kubelet
+        - restart-proxy
+        - restart-scheduler
+        - restart-controller-manager
 
-    - name: Render kubernetes .env files
+    - name: Render config.env files
+      template:
+      args:
+        src: /etc/ansible/k8s-config/{{item}}.j2
+        dest: /etc/kubernetes/{{item}}.env
+      with_items:
+        - config
+      notify:
+        - restart-scheduler
+        - restart-proxy
+        - restart-kubelet
+        - restart-controller-manager
+        - restart-apiserver
+
+    - name: Render apiserver.env files
       template:
       args:
         src: /etc/ansible/k8s-config/{{item}}.j2
         dest: /etc/kubernetes/{{item}}.env
       with_items:
         - apiserver
-        - config
+      notify:
+        - restart-apiserver
+
+    - name: Render controller-manager.env files
+      template:
+      args:
+        src: /etc/ansible/k8s-config/{{item}}.j2
+        dest: /etc/kubernetes/{{item}}.env
+      with_items:
         - controller-manager
+      notify:
+        - restart-controller-manager
+
+    - name: Render kubelet.env files
+      template:
+      args:
+        src: /etc/ansible/k8s-config/{{item}}.j2
+        dest: /etc/kubernetes/{{item}}.env
+      with_items:
         - kubelet
+      notify:
+        - restart-kubelet
+
+    - name: Render proxy.env files
+      template:
+      args:
+        src: /etc/ansible/k8s-config/{{item}}.j2
+        dest: /etc/kubernetes/{{item}}.env
+      with_items:
         - proxy
+      notify:
+        - restart-proxy
+
+    - name: Render scheduler.env files
+      template:
+      args:
+        src: /etc/ansible/k8s-config/{{item}}.j2
+        dest: /etc/kubernetes/{{item}}.env
+      with_items:
         - scheduler
+      notify:
+        - restart-scheduler
 
     - name: Create ovpn certificates
       delegate_to: localhost
@@ -294,12 +391,16 @@
       args:
         src: /etc/ansible/ha-config/apiserver.cfg.j2
         dest: /etc/haproxy/apiserver.cfg
+      notify:
+        - restart-apiserver-lb
 
     - name: Upload haproxy systemd unit
       copy:
       args:
         src: /etc/ansible/ha-config/apiserver-lb.service
         dest: /etc/systemd/system/apiserver-lb.service
+      notify:
+        - restart-apiserver-lb
 
     - name: Render cluster add-ons
       template:
@@ -319,3 +420,53 @@
 
     - name: Systemd daemon reload
       command: systemctl daemon-reload
+
+    - name: Start apiserver
+      service:
+      args:
+        name: kube-apiserver.service
+        state: "{%if inventory_hostname in groups['apiservers']%}started{%else%}stopped{%endif%}"
+        enabled: "{%if inventory_hostname in groups['apiservers']%}yes{%else%}no{%endif%}"
+      register: apiserver_needs_restart
+
+    - name: Start scheduler
+      service:
+      args:
+        name: kube-scheduler.service
+        state: "{%if inventory_hostname in groups['schedulers']%}started{%else%}stopped{%endif%}"
+        enabled: "{%if inventory_hostname in groups['schedulers']%}yes{%else%}no{%endif%}"
+      register: scheduler_needs_restart
+
+    - name: Start controller-manager
+      service:
+      args:
+        name: kube-controller-manager.service
+        state: "{%if inventory_hostname in groups['controller-managers']%}started{%else%}stopped{%endif%}"
+        enabled: "{%if inventory_hostname in groups['controller-managers']%}yes{%else%}no{%endif%}"
+      register: controller_needs_restart
+
+    - name: Start kubelet
+      service: name=kubelet.service state=started enabled=yes
+      register: kubelet_needs_restart
+
+    - name: Start proxy
+      service: name=kube-proxy.service state=started enabled=yes
+      register: proxy_needs_restart
+
+    - name: Start apiserver-lb
+      service: name=apiserver-lb.service state=started enabled=yes
+      register: apiserver_lb_needs_restart
+
+    - name: Start add-ons
+      shell: "/opt/kubernetes/bin/kubectl {{kubectl_params}} create -f /etc/kubernetes/addons/{{item}} || echo Maybe already started"
+      when: inventory_hostname == groups.apiservers[0]
+      with_items:
+        - kubernetes-dashboard.yaml
+        - skydns-rc.yaml
+        - skydns-svc.yaml
+        - heapster-controller.yaml
+        - heapster-service.yaml
+        - ovpn-secrets.yaml
+        - ovpn-controller.yaml
+        - ovpn-service.yaml
+        - nginx-ingress.yaml

@@ -4,9 +4,6 @@
   hosts: all
 
   tasks:
-    - name: Stop flanneld
-      service: name=flanneld state=stopped
-
     - name: Configure flannel network in etcd ({{flannel.network}})
       command: |
         etcdctl {{etcdctl_params}} set /coreos.com/network/config '{ "Network": "{{flannel.network}}", "Backend": {"Type": "udp"} }'
@@ -29,6 +26,8 @@
 
     - name: Start flanneld
       service: name=flanneld state=started enabled=yes
+      register: flannel_restarted
 
     - name: Restart docker
       service: name=docker state=restarted
+      when: flannel_restarted.changed

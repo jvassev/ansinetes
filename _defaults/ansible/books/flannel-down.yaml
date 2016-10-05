@@ -1,5 +1,5 @@
 ---
-- name: Configure and start flannel
+- name: Stop flannel
 
   hosts: all
 
