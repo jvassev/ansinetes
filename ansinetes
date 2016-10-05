@@ -152,6 +152,10 @@ kubectl config set-cluster ${ANSINETES_PROJECT} \
   --certificate-authority=${ANSINETES_PROJECT}/security/ca.pem \
   > /dev/null
 
+kubectl config set-cluster ${ANSINETES_PROJECT} \
+  --insecure-skip-tls-verify=true \
+  > /dev/null
+
 kubectl config set-credentials admin@${ANSINETES_PROJECT} \
   --client-key=${ANSINETES_PROJECT}/security/certs/admin-key.pem \
   --client-certificate=${ANSINETES_PROJECT}/security/certs/admin.pem \

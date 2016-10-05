@@ -24,7 +24,7 @@ KUBE_ETCD_SERVERS="\
 KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range={{kubernetes_cluster_ip_range}}"
 
 # default admission control policies
-KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,NamespaceExists,LimitRanger,SecurityContextDeny,ServiceAccount,ResourceQuota"
+KUBE_ADMISSION_CONTROL="--admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,ResourceQuota"
 
 # Add your own!
 KUBE_API_ARGS="\
