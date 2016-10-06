@@ -1,6 +1,6 @@
 ---
 kubernetes_install:
-  version: v1.4.0 
+  version: v1.4.0
   sha256: sha256:6cf3d78230f7659b87fa399a56a7aaed1fde6a73be9d05e25feedacfbd8d5a16
 
 flannel:
@@ -22,6 +22,10 @@ ovpn:
   network: "10.241.0.0"
   mask: "255.255.0.0"
   node_port: 30044
+
+datadog:
+  key: TODO
+  enabled: no
 
 kubernetes_etcd_prefix: /registry
 

@@ -417,6 +417,7 @@
         - ovpn-controller.yaml
         - ovpn-service.yaml
         - nginx-ingress.yaml
+        - datadog.yaml
 
     - name: Systemd daemon reload
       command: systemctl daemon-reload
@@ -470,3 +471,11 @@
         - ovpn-controller.yaml
         - ovpn-service.yaml
         - nginx-ingress.yaml
+
+    - name: Start datadog
+      shell: "/opt/kubernetes/bin/kubectl {{kubectl_params}} create -f /etc/kubernetes/addons/datadog.yaml || echo Maybe already started"
+      when: inventory_hostname == groups.apiservers[0] and datadog.enabled
+
+    - name: Stop datadog
+      shell: "/opt/kubernetes/bin/kubectl {{kubectl_params}} delete -f /etc/kubernetes/addons/datadog.yaml || echo Maybe already started"
+      when: inventory_hostname == groups.apiservers[0] and not datadog.enabled
