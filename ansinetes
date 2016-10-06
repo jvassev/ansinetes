@@ -22,6 +22,7 @@ usage() {
 Usage: ansinetes ARGS
     -p, --project DIR        Interactive shell into project directory
     -s, --shell              Starts bash with kubectl and etcdctl configured
+    -n, --namespace          If started with -s sets the default namespace
     -f, --file SCRIPT        Feeds SCRIPT to bash (with -s specified) or run
                                  it inside the container. Make sure  path is
                                  correct within container.
@@ -36,7 +37,9 @@ realpath() {
 
 ######## setup
 START_SHELL=0
+DEFAULT_NS="default"
 RUN_FILE=""
+
 readonly ETCD_VERSION=v2.3.7
 readonly KUBECTL_VERSION=v1.4.0
 
@@ -60,6 +63,10 @@ while [[ $# -gt 0 ]]; do
     ;;
     -f|--file)
       RUN_FILE="$2"
+      shift
+    ;;
+    -n|--namespace)
+      DEFAULT_NS="$2"
       shift
     ;;
     *)
@@ -164,6 +171,7 @@ kubectl config set-credentials admin@${ANSINETES_PROJECT} \
 
 kubectl config set-context ${ANSINETES_PROJECT} \
   --cluster=${ANSINETES_PROJECT} \
+  --namespace=$DEFAULT_NS \
   --user=admin@${ANSINETES_PROJECT} > /dev/null
 
 kubectl config use-context ${ANSINETES_PROJECT} > /dev/null
