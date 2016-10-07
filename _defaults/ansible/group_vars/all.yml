@@ -27,6 +27,10 @@ datadog:
   key: TODO
   enabled: no
 
+sysdig:
+  key: TODO
+  enabled: no
+
 kubernetes_etcd_prefix: /registry
 
 # this value valid for Vagrant

@@ -21,3 +21,9 @@
         name: systemd-timesyncd
         state: started
         enabled: yes
+
+    - name: Enable rpc-statd.service
+      service:
+        name: rpc-statd.service
+        state: started
+        enabled: yes
