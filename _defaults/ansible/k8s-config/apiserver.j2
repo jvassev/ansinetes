@@ -33,6 +33,7 @@ KUBE_API_ARGS="\
 --advertise-address={{ipv4address}} \
 --etcd-prefix={{kubernetes_etcd_prefix}} \
 --authorization-mode=ABAC \
+--allow-privileged \
 --service-node-port-range={{kubernetes_service_port_range}} \
 --authorization-policy-file=/etc/kubernetes/kube-apiserver/policy.jsonl \
 --tls-cert-file=/etc/kubernetes/kube-apiserver/server.pem \

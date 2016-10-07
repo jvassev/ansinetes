@@ -28,6 +28,7 @@ KUBELET_API_SERVER="--api-servers=https://localhost:6443"
 KUBELET_ARGS="\
 --cluster-dns={{kubernetes_dns.ip}} \
 --serialize-image-pulls=false \
+--allow-privileged \
 --cluster-domain={{kubernetes_dns.domain}} \
 --kubeconfig=/etc/kubernetes/kubelet/config \
 {{node_labels}} \
