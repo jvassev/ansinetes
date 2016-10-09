@@ -9,6 +9,7 @@ It has already taken some decisions for you:
 * Installs Kubernetes from the binary relase on Github
 * Uses flannel for the pod overlay network
 * Configures TLS everywhere possible
+* Prepares CoreOS to mount NFS shares
 * Runs the control plane in HA mode
 
 # Prerequisites
@@ -86,14 +87,6 @@ Etcd is essential both to Kubernetes and flannel. Ansinetes will deploy a 3-node
 PLAY [Bootstrap etcd cluster] **************************************************
 ...
 ```
-
-Then start and enable the etcd service:
-```bash
-[ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/etcd-up.yaml
-PLAY [Start etcd] **************************************************************
-...
-```
-
 ## Configure flannel
 ```bash
 [ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/flannel-bootstrap.yaml
@@ -193,14 +186,15 @@ kbt-3
 Systemd units are installed uniformly everywhere but are enabled and started only on the designated nodes. If you change the service to node mapping you need to run `kubernetes-up.yaml` and `kubernetes-down.yaml` again. Kubelet and Proxy run on every node.
 
 Api-server is started with `--authorization-mode=ABAC`. Have a look at the jsonl policy file for details.
+
 Every component authenticates to the apiserver using a private key under a service account (mapping the CN to the username). The default service account for the kube-system namespace has all privileges.
 Additionally an `admin` user is created and is used by `kubectl`. There is also username/password authentication configured for the admin user with default password `pass123`. You can change it or add other users to the file `token.csv` before bootstrapping the cluster.
 
-Thre can be many api-servers running at the same time. They run by default on the secure port 6442. On every node a ha-proxy is run (on 6443) that load balances between the available api-server. As a results kubelte go to https://localhost:6443 to locate the apiserver and you can scale up/down the number of api-servers.
+Thre can be many api-servers running at the same time. They run by default on the secure port 6442. On every node a ha-proxy is run (on 6443) that load balances between the available api-server. As a result kubelets go to https://localhost:6443 to locate the apiserver and you can scale up/down the number of api-servers almost transparently.
 
 Only three add-ons are deployed: Dashboard, DNS and Heapster. The add-ons yamls may be touched a bit.
 
-While not technically an add-on an OpenVPN [service](https://github.com/offlinehacker/openvpn-k8s) is also deployed by default. During development it is sometimes very useful to make your workstation part of the Kubernetes service network. When you run the playbook `kubernetes-bootstrap.yaml` an openvpn client configuration is re-generated locally. You can then "join" the Kubernetes service network using:
+While not technically an add-on an OpenVPN [service](https://github.com/jvassev/openvpn-k8s) is also deployed by default. During development it is sometimes very useful to make your workstation part of the Kubernetes service network. When you run the playbook `kubernetes-bootstrap.yaml` an openvpn client configuration is re-generated locally. You can then "join" the Kubernetes service network using:
 ```bash
 $ sudo openvpn ovpn-client.conf
 Sun Sep 18 22:40:05 2016 OpenVPN 2.3.7 x86_64-pc-linux-gnu [SSL (OpenSSL)] [LZO] [EPOLL] [PKCS11] [MH] [IPv6] built on Jul  8 2015
@@ -220,9 +214,11 @@ Address: 10.254.0.1
 ```
 When the OpenVPN bridge is opened you can target the pod themselves. This is not something you would do in production but is worth having around when troubleshooting.
 
-OpenVPN can be configured to change the DNS of your machine but it's highly OS-specific and it's not done.
+OpenVPN client can be put in control of the DNS of your machine but it's highly OS-specific and it's not done here.
 
 For demo purposes an nginx-ingress controller runs on two nodes. You can change this by adding/removing hosts to the `ingress-edges` group in the `hosts` file.
+
+Ansinetes will also deploy DataDog and Sysdig daemonsets if enabled in the configuration. The yaml files are kept close the original versions, only the API key is set (and occasionally a bug fixed). If you wish to enable/disable these services run kubernetes-bootstrap.yaml again.
 
 # Customizing the deployment
 The easiest way to customize the deployment is to edit the `ansible/group_vars/all.yaml` file. You can control many options there. If you want to experiment with other Kubernetes config options you can edit the ansible/k8s-config/*.j2 templates. They are borrowed from the [init](https://github.com/Kubernetes/contrib/tree/master/init/systemd) contrib dir. If you find an option worthy of putting in a group var please contribute! The systemd unit files will hardly need to be touched though. The `hosts` can be changed to remap/resize pools allocated to different components.
@@ -252,6 +248,14 @@ ovpn:
   mask: "255.255.0.0"
   node_port: 30044
 
+datadog:
+  enabled: yes
+  key: the_key
+
+sysdig:
+  enabled: yes
+  key: the_realkey
+
 kubernetes_etcd_prefix: /registry
 
 public_iface: ansible_eth1
@@ -260,25 +264,26 @@ public_iface: ansible_eth1
 Ansible must be configured to store facts in json files (the `fact_caching = jsonfile` setting). Facts are later used by the ansinetes script. If you expect facts to change just delete this directory and it will be populated next time a runbook is played.
 
 # Starting over
-Run any of the *-bootstrap playbooks as often as you like. After boostraping you may need to run the *-up or *-down playbooks. Runbooks try to be idempotent and do as little work as possible. The boostrap scripts will cause downtime as they will stop all services unconditionally.
+Run any of the *-bootstrap playbooks as often as you like. After boostraping you may need to run the *-up or *-down playbooks. Runbooks try to be idempotent and do as little work as possible.
 
 ## Regenerating the CA
-Delete the security/ca.pem file, security/certs/* and run kt-ca-init again. The `etcd-bootstrap.yaml` and `Kubernetes-boostrap.yaml` need to be run again to distribute the new certificates and keys. By judiciously deleting *.pem file from the `cert` dir you can retrigger key re-generation and redistribution.
+Delete the security/ca.pem file, security/certs/* and run kt-ca-init again. The `etcd-bootstrap.yaml` and `Kubernetes-boostrap.yaml` need to be run again to distribute the new certificates and keys. By judiciously deleting *.pem file from the `cert` dir you can retrigger key re-generation and re-distribution.
 
 ## Purging cluster state
-`etcd-bootstrap.yaml` will purge etcd state. If you've messed up only Kubernetes, you can run only the `kubernetes-purge.yaml` playbook.
+`etcd-purge.yaml` will purge etcd state. If you've messed up only Kubernetes, you can run only the `kubernetes-purge.yaml` playbook.
 
 ## Rotate SSH keys
 Run the playbook `ssh-keys-rotate.yaml`. This will prevent ansible from talking to your vms unless you update the `vagrant/user-data` file with the security/new ansible-ssh-key.pub before the next reboot.
 
 # Recommended workflow
-This project directory fully captures the cluster config state including the Ansible scripts and Kubernetes customization. You can keep it under source control. You can later change the playbooks and/or the `hosts` file. The `ansinetes` script is guarateed to work with somewhat modified project defaults.
+The project directory fully captures the cluster config state including the Ansible scripts and Kubernetes customization. You can keep it under source control. You can later change the playbooks and/or the `hosts` file. The `ansinetes` script is guarateed to work with somewhat modified project defaults.
 
 I also prefer naming the ansible hosts in order not to deal with IPs. The kubelets assigns a label "ansinetes:{name}" to the nodes for usability. But really, every way is the right way as long as the hosts file contains the required groups.
 
 # Why use ansinetes?
 You would find ansinetes useful if you:
 * want to test Kubernetes in an HA, multi-node deployment
+* you are in a somewhat contrainted environment and want to make best use of a static pool of machines
 * have some spare CoreOS VMs and want to quickly make a secure kube cluster with sensible config
 * want to try the Kubernetes bleeding edge and can't wait for the packages to arrive for your distro
 * want to painlessly try out obscure Kubernetes options
