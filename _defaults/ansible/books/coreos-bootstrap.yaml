@@ -27,3 +27,9 @@
         name: rpc-statd.service
         state: started
         enabled: yes
+
+    - name: Enable update-engine.service
+      service:
+        name: update-engine.service
+        state: started
+        enabled: yes

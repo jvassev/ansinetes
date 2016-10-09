@@ -52,15 +52,19 @@
       with_items:
         - /etc/etcd2
         - /etc/systemd/system/etcd2.service.d
+        - /etc/systemd/system/locksmithd.service.d
 
-    - name: Upload config file to /etc/systemd/system/etcd2.service.d/30-ansible
-      copy: src=/etc/ansible/etcd-config/30-ansible.conf dest=/etc/systemd/system/etcd2.service.d/30-ansible.conf
+    - name: Upload config file for etcd2
+      copy: src=/etc/ansible/etcd-config/etcd2.conf dest=/etc/systemd/system/etcd2.service.d/30-ansible.conf
 
-    - name: Upload config file to /etc/etcd2/env
-      template: src=/etc/ansible/etcd-config/config-bootstrap.j2 dest=/etc/etcd2/env
+    - name: Upload config file for locksmithd
+      copy: src=/etc/ansible/etcd-config/locksmithd.conf dest=/etc/systemd/system/locksmithd.service.d/30-ansible.conf
 
     - name: daemon-reload
       command: systemctl daemon-reload
 
     - name: start-etcd
       service: name=etcd2 enabled=yes state=started
+
+    - name: start locksmithd
+      service: name=locksmithd enabled=yes state=started
