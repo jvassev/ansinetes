@@ -14,6 +14,7 @@ ExecStart=/opt/kubernetes/bin/kube-proxy \
 	    $KUBE_PROXY_ARGS
 
 Restart=on-failure
+RestartSec=10
 LimitNOFILE=65536
 
 [Install]

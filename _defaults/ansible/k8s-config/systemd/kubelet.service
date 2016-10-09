@@ -20,6 +20,7 @@ ExecStart=/opt/kubernetes/bin/kubelet \
 	    $KUBELET_ARGS
 
 Restart=on-failure
+RestartSec=10
 KillMode=process
 
 [Install]

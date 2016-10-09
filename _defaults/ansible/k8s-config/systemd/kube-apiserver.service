@@ -2,7 +2,7 @@
 Description=Kubernetes API Server
 Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 After=network.target
-After=etcd.service
+After=etcd2.service
 
 [Service]
 EnvironmentFile=-/etc/kubernetes/config.env
@@ -21,6 +21,7 @@ ExecStart=/opt/kubernetes/bin/kube-apiserver \
 	    $KUBE_API_ARGS
 
 Restart=on-failure
+RestartSec=30
 Type=notify
 LimitNOFILE=65536
 
