@@ -4,9 +4,9 @@
   hosts: all
 
   tasks:
-    - name: Configure flannel network in etcd ({{flannel.network}})
+    - name: Configure flannel network in etcd ({{flannel_config.Network}})
       command: |
-        etcdctl {{etcdctl_params}} set /coreos.com/network/config '{ "Network": "{{flannel.network}}", "Backend": {"Type": "udp"} }'
+        etcdctl {{etcdctl_params}} set /coreos.com/network/config '{{flannel_config | to_json}}'
       when: inventory_hostname == play_hosts[0]
 
     - name: Create flannel drop-in dir
