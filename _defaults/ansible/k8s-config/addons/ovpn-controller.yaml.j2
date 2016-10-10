@@ -37,7 +37,7 @@ spec:
             - name: OVPN_K8S_POD_NETWORK
               value: {{ flannel.network | ipaddr('network')}}
             - name: OVPN_K8S_POD_SUBNET
-              value: {{ lookup('pipe', 'cidr2mask ' + flannel.network) }}
+              value: {{ lookup('pipe', 'cidr2mask ' + flannel_config.Network) }}
 
             - name: DEBUG
               value: "1"
