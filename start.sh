@@ -22,6 +22,7 @@ fi
 export PATH=$PATH:/ansinetes/bin
 
 if [ "$DEVMODE" == "" ]; then
+  HISTFILE=/tmp/ansible/history
   if [ `ls -1 /ansinetes/ansible 2> /dev/null | wc -l` = '0' 2> /dev/null ]; then
     log ' ***' First run, copying default configuration
     cp /_defaults/* /ansinetes -R

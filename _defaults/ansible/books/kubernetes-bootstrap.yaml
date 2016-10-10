@@ -460,8 +460,9 @@
       register: apiserver_lb_needs_restart
 
     - name: Start add-ons
-      shell: "/opt/kubernetes/bin/kubectl {{kubectl_params}} create -f /etc/kubernetes/addons/{{item}} || echo Maybe already started"
+      command: "/opt/kubernetes/bin/kubectl {{kubectl_params}} create -f /etc/kubernetes/addons/{{item}}"
       when: inventory_hostname == groups.apiservers[0]
+      ignore_errors: yes
       with_items:
         - kubernetes-dashboard.yaml
         - skydns-rc.yaml
@@ -474,9 +475,11 @@
         - nginx-ingress.yaml
 
     - name: Start/Stop datadog
-      shell: "/opt/kubernetes/bin/kubectl {{kubectl_params}} {%if datadog.enabled%}create{%else%}delete{%endif%} -f /etc/kubernetes/addons/datadog.yaml || echo Maybe already started"
+      command: "/opt/kubernetes/bin/kubectl {{kubectl_params}} {%if datadog.enabled%}create{%else%}delete{%endif%} -f /etc/kubernetes/addons/datadog.yaml"
       when: inventory_hostname == groups.apiservers[0]
+      ignore_errors: yes
 
     - name: Start/Stop sysdig
-      shell: "/opt/kubernetes/bin/kubectl {{kubectl_params}} {%if sysdig.enabled%}create{%else%}delete{%endif%} -f /etc/kubernetes/addons/sysdig-daemonset.yaml || echo Maybe already started"
+      command: "/opt/kubernetes/bin/kubectl {{kubectl_params}} {%if sysdig.enabled%}create{%else%}delete{%endif%} -f /etc/kubernetes/addons/sysdig-daemonset.yaml"
       when: inventory_hostname == groups.apiservers[0]
+      ignore_errors: yes

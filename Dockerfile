@@ -12,13 +12,14 @@ RUN curl -s -L -o /usr/bin/cfssl https://pkg.cfssl.org/R1.1/cfssl_linux-amd64 &&
     curl -s -L -o /usr/bin/cfssljson https://pkg.cfssl.org/R1.1/cfssljson_linux-amd64 && \
     chmod +x      /usr/bin/{cfssl,cfssljson}
 
-RUN yum -y install python-setuptools openssh python-crypto && \
+RUN yum -y install python-setuptools openssh && \
 	easy_install pip && \
 	pip install setuptools -U
 
 RUN yum -y install gcc openssl openssl-devel python-devel libffi-devel && \
     pip install ansible==2.1.1.0 netaddr && \
-    yum -y remove  gcc openssl-devel python-devel
+    yum -y remove gcc openssl-devel python-devel && \
+    yum clean all
 
 COPY start.sh /
 

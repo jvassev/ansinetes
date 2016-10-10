@@ -35,7 +35,7 @@ spec:
               value: {{ lookup('pipe', 'cidr2mask ' + kubernetes_cluster_ip_range) }}
 
             - name: OVPN_K8S_POD_NETWORK
-              value: {{ flannel.network | ipaddr('network')}}
+              value: {{ flannel_config.Network | ipaddr('network')}}
             - name: OVPN_K8S_POD_SUBNET
               value: {{ lookup('pipe', 'cidr2mask ' + flannel_config.Network) }}
 
