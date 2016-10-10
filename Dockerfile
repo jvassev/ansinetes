@@ -8,8 +8,8 @@ ENTRYPOINT ["/start.sh"]
 
 RUN ln -s /ansinetes/ansible /etc/ansible || true
 
-RUN curl -s -L -o /usr/bin/cfssl https://pkg.cfssl.org/R1.2/cfssl_linux-amd64 && \
-    curl -s -L -o /usr/bin/cfssljson https://pkg.cfssl.org/R1.2/cfssljson_linux-amd64 && \
+RUN curl -s -L -o /usr/bin/cfssl https://pkg.cfssl.org/R1.1/cfssl_linux-amd64 && \
+    curl -s -L -o /usr/bin/cfssljson https://pkg.cfssl.org/R1.1/cfssljson_linux-amd64 && \
     chmod +x      /usr/bin/{cfssl,cfssljson}
 
 RUN yum -y install python-setuptools openssh && \
