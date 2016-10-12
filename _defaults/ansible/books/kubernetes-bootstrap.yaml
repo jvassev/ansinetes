@@ -3,6 +3,22 @@
 
   hosts: all
 
+  vars:
+    addons:
+      - kubernetes-dashboard.yaml
+      - skydns-rc.yaml
+      - skydns-svc.yaml
+      - heapster-controller.yaml
+      - heapster-service.yaml
+      - ovpn-secrets.yaml
+      - ovpn-controller.yaml
+      - ovpn-service.yaml
+      - default-backend.yaml
+      - default-backend-service.yaml
+      - nginx-ingress.yaml
+      - datadog.yaml
+      - sysdig-daemonset.yaml
+
   handlers:
     - name: restart-apiserver
       service: name=kube-apiserver state=restarted enabled=yes
@@ -402,23 +418,6 @@
       notify:
         - restart-apiserver-lb
 
-    - name: Render cluster add-ons
-      template:
-      args:
-        src: /etc/ansible/k8s-config/addons/{{item}}.j2
-        dest: /etc/kubernetes/addons/{{item}}
-      with_items:
-        - kubernetes-dashboard.yaml
-        - skydns-rc.yaml
-        - skydns-svc.yaml
-        - heapster-controller.yaml
-        - heapster-service.yaml
-        - ovpn-secrets.yaml
-        - ovpn-controller.yaml
-        - ovpn-service.yaml
-        - nginx-ingress.yaml
-        - datadog.yaml
-        - sysdig-daemonset.yaml
 
     - name: Systemd daemon reload
       command: systemctl daemon-reload
@@ -459,20 +458,35 @@
       service: name=apiserver-lb.service state=started enabled=yes
       register: apiserver_lb_needs_restart
 
-    - name: Start add-ons
-      command: "/opt/kubernetes/bin/kubectl {{kubectl_params}} create -f /etc/kubernetes/addons/{{item}}"
+    - name: Render cluster add-ons on the nodes
+      template:
+      args:
+        src: /etc/ansible/k8s-config/addons/{{item}}.j2
+        dest: /etc/kubernetes/addons/{{item}}
+      register: addons_rendered
+      with_items: "{{addons}}"
+
+    - name: Render cluster add-ons locally
+      delegate_to: localhost
       when: inventory_hostname == groups.apiservers[0]
+      become: False
+      template:
+      args:
+        src: /etc/ansible/k8s-config/addons/{{item}}.j2
+        dest: /tmp/ansible/{{item}}
+      with_items: "{{addons}}"
+
+    - name: Stop add-ons
+      command: "/opt/kubernetes/bin/kubectl {{kubectl_params}} delete -f /etc/kubernetes/addons/{{item.item}}"
+      when: inventory_hostname == groups.apiservers[0] and item.changed
       ignore_errors: yes
-      with_items:
-        - kubernetes-dashboard.yaml
-        - skydns-rc.yaml
-        - skydns-svc.yaml
-        - heapster-controller.yaml
-        - heapster-service.yaml
-        - ovpn-secrets.yaml
-        - ovpn-controller.yaml
-        - ovpn-service.yaml
-        - nginx-ingress.yaml
+      with_items: "{{addons_rendered.results}}"
+
+    - name: Start add-ons
+      command: "/opt/kubernetes/bin/kubectl {{kubectl_params}} create -f /etc/kubernetes/addons/{{item.item}}"
+      when: inventory_hostname == groups.apiservers[0] and item.changed
+      ignore_errors: yes
+      with_items: "{{addons_rendered.results}}"
 
     - name: Start/Stop datadog
       command: "/opt/kubernetes/bin/kubectl {{kubectl_params}} {%if datadog.enabled%}create{%else%}delete{%endif%} -f /etc/kubernetes/addons/datadog.yaml"
