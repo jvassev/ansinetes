@@ -11,7 +11,7 @@ spec:
       nodeSelector:
         role: nginx-ingress
       containers:
-      - image: nginxdemos/nginx-ingress:0.3
+      - image: gcr.io/google_containers/nginx-ingress-controller:0.7
         imagePullPolicy: Always
         name: nginx-ingress
         ports:
