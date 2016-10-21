@@ -1,7 +1,7 @@
 ---
 kubernetes_install:
-  version: v1.4.0
-  sha256: sha256:6cf3d78230f7659b87fa399a56a7aaed1fde6a73be9d05e25feedacfbd8d5a16
+  version: v1.4.4
+  sha256: sha256:2732bfc56ceabc872b6af3f460cbda68c2384c95a1c0c72eb33e5ff0e03dc9da
 
 
 # this is converted to json and used to configure flannel

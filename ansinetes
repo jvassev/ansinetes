@@ -41,7 +41,7 @@ DEFAULT_NS="default"
 RUN_FILE=""
 
 readonly ETCD_VERSION=v2.3.7
-readonly KUBECTL_VERSION=v1.4.0
+readonly KUBECTL_VERSION=v1.4.4
 
 readonly ANSINETES_IMAGE=${ANSINETES_IMAGE:-jvassev/ansinetes}
 
