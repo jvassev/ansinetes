@@ -52,6 +52,7 @@
         dest: /tmp/ansible/kubernetes-{{kubernetes_install.version}}.tar.gz
         checksum: "{{kubernetes_install.sha256}}"
       when: inventory_hostname == play_hosts[0]
+      register: just_downloaded
       delegate_to: localhost
       become: False
 
@@ -60,7 +61,7 @@
       args:
         chdir: /tmp/ansible
         creates: /tmp/ansible/k8s-bin/kubelet
-      when: inventory_hostname == play_hosts[0]
+      when: inventory_hostname == play_hosts[0] and just_downloaded.changed
       delegate_to: localhost
       become: False
 
