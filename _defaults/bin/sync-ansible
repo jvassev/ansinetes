@@ -1,0 +1,9 @@
+#!/bin/bash
+
+readonly script_dir=$(dirname "${BASH_SOURCE[0]}")
+. ${script_dir}/util.sh
+
+cd /_defaults/ansible
+find  ! -name hosts ! -name all.yml -exec cp {}  /ansinetes/ansible/{} \;
+
+cp -Rv /_defaults/bin/* /ansinetes/bin
