@@ -146,6 +146,8 @@ kube-system   kube-dns-v19-r2o5g                      3/3       Running   0     
 kube-system   kubernetes-dashboard-2982215621-w1nu4   1/1       Running   0          1m
 ```
 
+You can pass `-n NAMESPACE` and you will be dropped in the selected Kubernetes namespace.
+
 Your old kubecfg will be left intact. In fact every time you enter a shell with `-s` the kubecfg will be enriched with configuration about the cluster and the full path to the project dir will be used as the context and cluster name.
 
 If you just want to generate a kubeconfig file and distribute it, use this:
@@ -154,8 +156,21 @@ $ KUBECONFIG=my-kubeconfig ansinetes -p demo -s < /dev/null
 ````
 The file `my-kubeconfig` now describes a connection to the `demo` cluster, is self-contained and can be distributed.
 
+While in a shell (`-s`) the `ssh` command is configured with a custom ssh_config file. This lets you ssh to your nodes using the ansible private key and also using the ansible_hostname of the machine (without dealing with IP's, keys and ssh options):
+
+```bash
+$ ./ansinetes -p demo -s
+Welcome to ansinetes virtual environment "demo"
+$ [*demo*] ssh kbt-1
+CoreOS stable (1185.3.0)
+core@kbt-1 ~ $
+
+```
+
+Finally, for every ansinetes project a different bash history is maintained which is different from the default. This is a great timesaver when you are dealing with long and complex `kubectl` invocations. Also it may prevent accidents as the history contains entries valid only in the current context/project.
+
 # Deployment description
-When Vagrant is used 4 VMs are created. This can be changed by editing the vagrant/config.rb script. 3 nodes take part in the etcd quorum while the rest are proxies. There are two api-servers. Controller-manager and Scheduler run with `--leader-elect` option. Components that target the apiserver will talk to the first node from the 'apiservers' group (no HA here). The default `hosts` file describes the role mapping:
+When Vagrant is used there are 4 VMs being created. This can be changed by editing the vagrant/config.rb script. 3 nodes take part in the etcd quorum while the rest are proxies. There are two api-servers. Controller-manager and Scheduler run with `--leader-elect` option. Components that target the apiserver will talk to the first node from the 'apiservers' group (no HA here). The default `hosts` file describes the role mapping:
 
 ```ini
 [coreos]
