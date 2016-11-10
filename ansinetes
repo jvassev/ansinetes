@@ -180,8 +180,27 @@ kubectl config use-context ${ANSINETES_PROJECT} > /dev/null
 ######## prepare bash env
 mkdir ${ANSINETES_PROJECT}/tmp -p &> /dev/null || true
 readonly bash_cfg=$(mktemp)
+readonly ssh_cfg=$(mktemp)
 readonly cyan="\[\033[0;36m\]"
 readonly no_color="\[\033[0m\]"
+
+cp ~/.ssh/config $ssh_cfg || true
+echo "# ansinetes customizations" >> $ssh_cfg
+IFS='
+'
+for line in $(cat ${ANSINETES_PROJECT}/ansible/hosts | grep ansible_host | sed 's/ansible_host=//'); do
+  IFS=' ' read -r -a array <<< $line
+  cat <<EOF
+
+Host ${array[0]}
+  HostName ${array[1]}
+  IdentityFile ${ANSINETES_PROJECT}/security/ansible-ssh-key
+  User core
+  ForwardAgent yes
+    IdentitiesOnly yes
+  StrictHostKeyChecking no
+EOF
+done >> $ssh_cfg
 
 cp ~/.bashrc ${bash_cfg} &> /dev/null || echo No .bashrc file found
 
@@ -199,6 +218,7 @@ export PS1="\${PS1}[${cyan}*${SHORT_NAME}*${no_color}] "
 kubectl config use-context ${ANSINETES_PROJECT} &> /dev/null
 source <(kubectl completion bash)
 
+alias ssh="ssh -F ${ssh_cfg}"
 export HISTFILE=${ANSINETES_PROJECT}/tmp/${DEFAULT_NS}-hist
 echo Welcome to ansinetes virtual environment \"${ANSINETES_PROJECT}\"
 EOF
