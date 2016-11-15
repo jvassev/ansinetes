@@ -13,6 +13,20 @@ if [ "$USER" != "ansinetes" ]; then
   chown ansinetes. /ansinetes
   chown ansinetes. /tmp/ansible
   if [ "$RUN_FILE" == "" ]; then
+    mkdir ~ansinetes/.ssh -p &> /dev/null
+    IFS='
+'
+    for line in $(cat /etc/ansible/hosts | grep ansible_host | sed 's/ansible_host=//'); do
+      IFS=' ' read -r -a array <<< $line
+      cat <<EOF
+Host ${array[0]}
+  HostName ${array[1]}
+  IdentityFile /ansinetes/security/ansible-ssh-key
+  User core
+  IdentitiesOnly yes
+  StrictHostKeyChecking no
+EOF
+    done >  ~ansinetes/.ssh/config
     exec su ansinetes -l
   else
     exec su ansinetes $RUN_FILE

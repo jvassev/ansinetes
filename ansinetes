@@ -197,7 +197,7 @@ Host ${array[0]}
   IdentityFile ${ANSINETES_PROJECT}/security/ansible-ssh-key
   User core
   ForwardAgent yes
-    IdentitiesOnly yes
+  IdentitiesOnly yes
   StrictHostKeyChecking no
 EOF
 done >> $ssh_cfg
