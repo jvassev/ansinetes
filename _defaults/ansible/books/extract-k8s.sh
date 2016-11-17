@@ -4,6 +4,10 @@ TGZ=$1
 
 readonly K8S_DIR=k8s-bin
 
+if [ -f kubernetes/server/bin/kube-apiserver ]; then
+	exit 0
+fi
+
 mkdir ${K8S_DIR} &> /dev/null || (rm -frv ${K8S_DIR} && mkdir ${K8S_DIR})
 
 tar vxzf $TGZ kubernetes/server/kubernetes-server-linux-amd64.tar.gz --strip-components=2
