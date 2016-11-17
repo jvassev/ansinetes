@@ -10,7 +10,6 @@
         name: kube-apiserver.service
         state: "{%if inventory_hostname in groups['apiservers']%}started{%else%}stopped{%endif%}"
         enabled: "{%if inventory_hostname in groups['apiservers']%}yes{%else%}no{%endif%}"
-      register: apiserver_needs_restart
 
     - name: Start scheduler
       service:
@@ -18,7 +17,6 @@
         name: kube-scheduler.service
         state: "{%if inventory_hostname in groups['schedulers']%}started{%else%}stopped{%endif%}"
         enabled: "{%if inventory_hostname in groups['schedulers']%}yes{%else%}no{%endif%}"
-      register: scheduler_needs_restart
 
     - name: Start controller-manager
       service:
@@ -26,19 +24,23 @@
         name: kube-controller-manager.service
         state: "{%if inventory_hostname in groups['controller-managers']%}started{%else%}stopped{%endif%}"
         enabled: "{%if inventory_hostname in groups['controller-managers']%}yes{%else%}no{%endif%}"
-      register: controller_needs_restart
 
     - name: Start kubelet
-      service: name=kubelet.service state=started enabled=yes
-      register: kubelet_needs_restart
+      service:
+      args:
+        name: kubelet.service
+        state: "{%if inventory_hostname in groups['kubelets']%}started{%else%}stopped{%endif%}"
+        enabled: "{%if inventory_hostname in groups['kubelets']%}yes{%else%}no{%endif%}"
 
     - name: Start proxy
-      service: name=kube-proxy.service state=started enabled=yes
-      register: proxy_needs_restart
+      service:
+      args:
+        name: kube-proxy.service
+        state: "{%if inventory_hostname in groups['kubelets']%}started{%else%}stopped{%endif%}"
+        enabled: "{%if inventory_hostname in groups['kubelets']%}yes{%else%}no{%endif%}"
 
     - name: Start apiserver-lb
       service: name=apiserver-lb.service state=started enabled=yes
-      register: apiserver_lb_needs_restart
 
     - name: Start add-ons
       shell: "/opt/kubernetes/bin/kubectl {{kubectl_params}} create -f /etc/kubernetes/addons/{{item}} || echo Maybe already started"

@@ -52,7 +52,6 @@
         dest: /tmp/ansible/kubernetes-{{kubernetes_install.version}}.tar.gz
         checksum: "{{kubernetes_install.sha256}}"
       when: inventory_hostname == play_hosts[0]
-      register: just_downloaded
       delegate_to: localhost
       become: False
 
@@ -61,7 +60,7 @@
       args:
         chdir: /tmp/ansible
         creates: /tmp/ansible/k8s-bin/kubelet
-      when: inventory_hostname == play_hosts[0] and just_downloaded.changed
+      when: inventory_hostname == play_hosts[0]
       delegate_to: localhost
       become: False
 
@@ -448,11 +447,19 @@
       register: controller_needs_restart
 
     - name: Start kubelet
-      service: name=kubelet.service state=started enabled=yes
+      service:
+      args:
+        name: kubelet.service
+        state: "{%if inventory_hostname in groups['kubelets']%}started{%else%}stopped{%endif%}"
+        enabled: "{%if inventory_hostname in groups['kubelets']%}yes{%else%}no{%endif%}"
       register: kubelet_needs_restart
 
     - name: Start proxy
-      service: name=kube-proxy.service state=started enabled=yes
+      service:
+      args:
+        name: kube-proxy.service
+        state: "{%if inventory_hostname in groups['kubelets']%}started{%else%}stopped{%endif%}"
+        enabled: "{%if inventory_hostname in groups['kubelets']%}yes{%else%}no{%endif%}"
       register: proxy_needs_restart
 
     - name: Start apiserver-lb

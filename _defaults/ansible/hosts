@@ -17,9 +17,16 @@ kbt-4
 kbt-1
 kbt-3
 
-[controller-managers]
-kbt-4
+
+[kubeletes]
+kbt-1
+kbt-2
 kbt-3
+
+
+[controller-managers]
+kbt-2
+kbt-4
 
 [etcd-quorum-members]
 kbt-1
@@ -27,7 +34,7 @@ kbt-2
 kbt-3
 
 [ingress-edges]
-kbt-2
+kbt-1
 kbt-4
 
 [coreos:vars]
