@@ -34,11 +34,11 @@
 
     - name: restart-proxy
       service: name=kube-proxy state=restarted enabled=yes
-      when: not proxy_needs_restart.changed
+      when: inventory_hostname in groups['kubelets'] and not proxy_needs_restart.changed
 
     - name: restart-kubelet
       service: name=kubelet state=restarted enabled=yes
-      when: not kubelet_needs_restart.changed
+      when: inventory_hostname in groups['kubelets'] and not kubelet_needs_restart.changed
 
     - name: restart-controller-manager
       service: name=kube-controller-manager state=restarted enabled=yes
