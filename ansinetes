@@ -30,6 +30,7 @@ Usage: ansinetes ARGS
 EOF
 }
 
+# mac doesn't have readlink -f
 realpath() {
   DIR=$1
   (cd "$DIR" && echo "$(pwd -P)")
@@ -41,8 +42,6 @@ DEFAULT_NS="default"
 RUN_FILE=""
 
 readonly ETCD_VERSION=v2.3.7
-readonly KUBECTL_VERSION=v1.4.5
-
 readonly ANSINETES_IMAGE=${ANSINETES_IMAGE:-jvassev/ansinetes}
 
 
@@ -126,12 +125,13 @@ if [ ! -f ${ANSINETES_PROJECT}/tmp/local-bin/etcdctl ]; then
 fi
 
 
-####### download kubectl only for mac
+####### download kubectl
 if [ ! -f ${ANSINETES_PROJECT}/tmp/local-bin/kubectl ]; then
   log Installing kubectl locally...
   mkdir -p ${ANSINETES_PROJECT}/tmp/local-bin &> /dev/null || true
   pushd ${ANSINETES_PROJECT}/tmp/local-bin &> /dev/null
 
+  KUBECTL_VERSION=$(cat ${ANSINETES_PROJECT}/ansible/group_vars/all.yml | sed -n '/kubernetes_install/{n;p;n;p;n;p;}' | grep version | sed 's/.*version: *//')
   if [ "$(uname)" == "Darwin" ]; then
     curl -L -#  -O https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/darwin/amd64/kubectl
     chmod +x kubectl
