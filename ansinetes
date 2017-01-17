@@ -129,17 +129,16 @@ fi
 if [ ! -f ${ANSINETES_PROJECT}/tmp/local-bin/kubectl ]; then
   log Installing kubectl locally...
   mkdir -p ${ANSINETES_PROJECT}/tmp/local-bin &> /dev/null || true
-  pushd ${ANSINETES_PROJECT}/tmp/local-bin &> /dev/null
+  pushd ${ANSINETES_PROJECT}/tmp/ &> /dev/null
 
   KUBECTL_VERSION=$(cat ${ANSINETES_PROJECT}/ansible/group_vars/all.yml | sed -n '/kubernetes_install/{n;p;n;p;n;p;}' | grep version | sed 's/.*version: *//')
   if [ "$(uname)" == "Darwin" ]; then
-    curl -L -#  -O https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/darwin/amd64/kubectl
-    chmod +x kubectl
+    curl -L -# -O https://dl.k8s.io/${KUBECTL_VERSION}/kubernetes-client-darwin-amd64.tar.gz
   else
-    curl -L -#  -O https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
-    chmod +x kubectl
+    curl -L -# -O https://dl.k8s.io/${KUBECTL_VERSION}/kubernetes-client-linux-amd64.tar.gz
   fi
 
+  tar xzf kubernetes-client-*.tar.gz -C local-bin --strip-components 3
   popd &> /dev/null
 fi
 

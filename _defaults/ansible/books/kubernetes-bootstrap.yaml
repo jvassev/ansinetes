@@ -48,7 +48,7 @@
     - name: Download kubernetes binaries locally
       get_url:
       args:
-        url: https://storage.googleapis.com/kubernetes-release/release/{{kubernetes_install.version}}/kubernetes-server-linux-amd64.tar.gz
+        url: https://dl.k8s.io/{{kubernetes_install.version}}/kubernetes-server-linux-amd64.tar.gz
         dest: /tmp/ansible/kubernetes-{{kubernetes_install.version}}.tar.gz
         checksum: "{{kubernetes_install.sha256}}"
       when: inventory_hostname == play_hosts[0]
