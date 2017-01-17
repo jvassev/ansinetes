@@ -48,7 +48,7 @@ spec:
           command:
             - /heapster
             - --source=kubernetes.summary_api:''
-            - --sink=gcm
+            - --sink=log
           volumeMounts:
             - name: ssl-certs
               mountPath: /etc/ssl/certs
@@ -61,7 +61,7 @@ spec:
           command:
             - /eventer
             - --source=kubernetes:''
-            - --sink=gcl
+            - --sink=log
           volumeMounts:
             - name: ssl-certs
               mountPath: /etc/ssl/certs
