@@ -1,0 +1,10 @@
+---
+
+kubernetes_install:
+  version: v1.4.8
+  sha256: sha256:c3dc0e26c00bbe40bd19f61d2d7faeaa56384355c58a0efc4227a360b3eb2da2
+
+######### Not customizable, just reducing duplication
+etcdctl_params: --ca-file /etc/ssl/etcd/ca.pem --key-file /etc/ssl/etcd/client-key.pem --cert-file /etc/ssl/etcd/client.pem --endpoint https://localhost:2379
+locksmithctl_params: --etcd-cafile /etc/ssl/etcd/ca.pem --etcd-keyfile /etc/ssl/etcd/client-key.pem --etcd-certfile /etc/ssl/etcd/client.pem --endpoint https://localhost:2379
+kubectl_params: --kubeconfig=/etc/kubernetes/kubelet/config

@@ -3,6 +3,9 @@
 
   hosts: all
 
+  vars_files:
+    - /etc/ansible/k8s-config/vars.yaml
+
   vars:
     addons:
       - dashboard-controller.yaml
