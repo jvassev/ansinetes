@@ -25,6 +25,7 @@ ovpn:
 
 datadog:
   key: TODO
+  tags: ""
   enabled: no
 
 sysdig:

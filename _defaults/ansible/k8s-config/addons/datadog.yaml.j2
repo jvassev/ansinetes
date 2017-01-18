@@ -22,6 +22,8 @@ spec:
             value: "{{datadog.key}}"
           - name: KUBERNETES
             value: "yes"
+          - name: TAGS
+            value: "{{datadog.tags}}"
         volumeMounts:
           - name: dockersocket
             mountPath: /var/run/docker.sock
