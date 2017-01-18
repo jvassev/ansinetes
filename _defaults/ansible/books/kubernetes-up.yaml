@@ -49,9 +49,10 @@
       shell: "/opt/kubernetes/bin/kubectl {{kubectl_params}} create -f /etc/kubernetes/addons/{{item}} || echo Maybe already started"
       when: inventory_hostname == groups.apiservers[0]
       with_items:
-        - kubernetes-dashboard.yaml
-        - skydns-rc.yaml
-        - skydns-svc.yaml
+        - dashboard-controller.yaml
+        - dashboard-service.yaml
+        - kubedns-controller.yaml
+        - kubedns-svc.yaml
         - heapster-controller.yaml
         - heapster-service.yaml
         - ovpn-secrets.yaml
