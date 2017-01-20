@@ -131,7 +131,7 @@ if [ ! -f ${ANSINETES_PROJECT}/tmp/local-bin/kubectl ]; then
   mkdir -p ${ANSINETES_PROJECT}/tmp/local-bin &> /dev/null || true
   pushd ${ANSINETES_PROJECT}/tmp/ &> /dev/null
 
-  KUBECTL_VERSION=$(cat ${ANSINETES_PROJECT}/ansible/group_vars/all.yml | sed -n '/kubernetes_install/{n;p;n;p;n;p;}' | grep version | sed 's/.*version: *//')
+  KUBECTL_VERSION=$(cat ${ANSINETES_PROJECT}/ansible/k8s-config/vars.yaml | sed -n '/kubernetes_install/{n;p;n;p;n;p;}' | grep version | sed 's/.*version: *//')
   if [ "$(uname)" == "Darwin" ]; then
     curl -L -# -O https://dl.k8s.io/${KUBECTL_VERSION}/kubernetes-client-darwin-amd64.tar.gz
   else
