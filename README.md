@@ -239,10 +239,6 @@ Ansinetes will also deploy DataDog and Sysdig daemonsets if enabled in the confi
 The easiest way to customize the deployment is to edit the `ansible/group_vars/all.yaml` file. You can control many options there. If you want to experiment with other Kubernetes config options you can edit the ansible/k8s-config/*.j2 templates. They are borrowed from the [init](https://github.com/Kubernetes/contrib/tree/master/init/systemd) contrib dir. If you find an option worthy of putting in a group var please contribute! The systemd unit files will hardly need to be touched though. The `hosts` can be changed to remap/resize pools allocated to different components.
 An example `all.yaml` file is given bellow to
 ```yaml
-kubernetes_install:
-  version: v1.3.7
-  sha256: sha256:ad18566a09ff87b36107c2ea238fa5e20988d7a62c85df9c8598920679fec4a1
-
 flannel:
   network: "25.0.0.0/16"
 
@@ -265,10 +261,11 @@ ovpn:
 
 datadog:
   enabled: yes
+  tags: "k1=v1,k2=v2"
   key: the_key
 
 sysdig:
-  enabled: yes
+  enabled: no
   key: the_realkey
 
 kubernetes_etcd_prefix: /registry
