@@ -116,7 +116,7 @@ PLAY [Start kubernetes] ********************************************************
 ## Access your environment
 Now that your cluser is running in Vagrant it's time to access it. In another shell
 run `ansinetes -p demo -s` (-s for shell). It will start your $SHELL with a modified
-environment, changed $PATH, changed $PS1 and both `kubectl` and `etcdctl` preconfigured. The changed prompt contains the project name enclosed in **
+environment, changed $PATH, changed $PS1 and both `kubectl` and `etcdctl` preconfigured. The changed prompt contains the project name and the current namespace enclosed in **
 
 ```bash
 $ ./ansinetes -p demo -s
@@ -127,26 +127,26 @@ Installing kubectl locally...
 Welcome to ansinetes virtual environment "demo"
 
 # etctl is configured!
-$ [*demo*] etcdctl member list
+$ [*demo:default*] etcdctl member list
 546c6cb8c021e3: name=a42bababcba440978f62d41d8b7e26b6 peerURLs=https://172.33.8.101:2380 clientURLs=https://172.33.8.101:2379 isLeader=false
 6565485f164c9da3: name=5f6e37eb65d84199b5f3551959667537 peerURLs=https://172.33.8.102:2380 clientURLs=https://172.33.8.102:2379 isLeader=true
 a0aca39404520794: name=adf5c02dd12a48419d681359438a2740 peerURLs=https://172.33.8.103:2380 clientURLs=https://172.33.8.103:2379 isLeader=false
 
 # ... and so is kubectl :)
-$ [*demo*] kubectl get no
+$ [*demo:default*] kubectl get no
 NAME           STATUS    AGE
 172.33.8.101   Ready     22m
 172.33.8.102   Ready     22m
 172.33.8.103   Ready     22m
 172.33.8.104   Ready     22m
 
-$ [*demo*] kubectl get pod --all-namespaces
+$ [*demo:default*] kubectl get pod --all-namespaces
 NAMESPACE     NAME                                    READY     STATUS    RESTARTS   AGE
 kube-system   kube-dns-v19-r2o5g                      3/3       Running   0          1m
 kube-system   kubernetes-dashboard-2982215621-w1nu4   1/1       Running   0          1m
 ```
 
-You can pass `-n NAMESPACE` and you will be dropped in the selected Kubernetes namespace.
+You can pass `-n NAMESPACE` and you will be dropped in the selected Kubernetes namespace, which will also be visible in your prompt.
 
 Your old kubecfg will be left intact. In fact every time you enter a shell with `-s` the kubecfg will be enriched with configuration about the cluster and the full path to the project dir will be used as the context and cluster name.
 
@@ -159,15 +159,15 @@ The file `my-kubeconfig` now describes a connection to the `demo` cluster, is se
 While in a shell (`-s`) the `ssh` command is configured with a custom ssh_config file. This lets you ssh to your nodes using the ansible private key and also using the ansible_hostname of the machine (without dealing with IP's, keys and ssh options):
 
 ```bash
-$ ./ansinetes -p demo -s
+$ ./ansinetes -p demo -s -n web
 Welcome to ansinetes virtual environment "demo"
-$ [*demo*] ssh kbt-1
+$ [*demo:web*] ssh kbt-1
 CoreOS stable (1185.3.0)
 core@kbt-1 ~ $
 
 ```
 
-Finally, for every ansinetes project a different bash history is maintained which is different from the default. This is a great timesaver when you are dealing with long and complex `kubectl` invocations. Also it may prevent accidents as the history contains entries valid only in the current context/project.
+Finally, for every ansinetes project a different bash history is maintained which is different from the default. This is a great timesaver when you are dealing with long and complex `kubectl` invocations. Also it may prevent accidents as the history contains entries valid only in the current /project/namespace.
 
 # Deployment description
 When Vagrant is used there are 4 VMs being created. This can be changed by editing the vagrant/config.rb script. 3 nodes take part in the etcd quorum while the rest are proxies. There are two api-servers. Controller-manager and Scheduler run with `--leader-elect` option. Components that target the apiserver will talk to the first node from the 'apiservers' group (no HA here). The default `hosts` file describes the role mapping:

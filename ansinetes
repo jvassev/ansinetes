@@ -212,7 +212,7 @@ export ETCDCTL_CERT_FILE=${ANSINETES_PROJECT}/security/certs/etcd-client.pem
 export ETCDCTL_KEY_FILE=${ANSINETES_PROJECT}/security/certs/etcd-client-key.pem
 
 export PATH=${ANSINETES_PROJECT}/tmp/local-bin:\$PATH
-export PS1="\${PS1}[${cyan}*${SHORT_NAME}*${no_color}] "
+export PS1="\${PS1}[${cyan}*${SHORT_NAME}:${DEFAULT_NS}*${no_color}] "
 
 kubectl config use-context ${ANSINETES_PROJECT} &> /dev/null
 source <(kubectl completion bash)
