@@ -114,12 +114,8 @@
         owner: root
         mode: 0755
       with_items:
-        - kube-scheduler
-        - kube-proxy
-        - kubelet
+        - hyperkube
         - kubectl
-        - kube-controller-manager
-        - kube-apiserver
       notify:
         - restart-scheduler
         - restart-proxy

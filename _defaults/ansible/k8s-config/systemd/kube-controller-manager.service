@@ -7,7 +7,7 @@ EnvironmentFile=-/etc/kubernetes/config.env
 EnvironmentFile=-/etc/kubernetes/controller-manager.env
 User=kube
 
-ExecStart=/opt/kubernetes/bin/kube-controller-manager \
+ExecStart=/opt/kubernetes/bin/hyperkube controller-manager \
 	    $KUBE_LOGTOSTDERR \
 	    $KUBE_LOG_LEVEL \
 	    $KUBE_MASTER \

@@ -12,14 +12,8 @@
     - name: Create flannel drop-in dir
       file: state=directory path=/etc/systemd/system/flanneld.service.d
 
-    - name: Create flannel config dir (for older flannels running in docker)
-      file: state=directory path=/run/flannel
-
     - name: Upload flannel config file
       template: dest=/etc/systemd/system/flanneld.service.d/20-iface.conf src=/etc/ansible/flannel-config/20-iface.conf.j2
-
-    - name: Upload flannel config file (for older flannels running in docker)
-      template: dest=/run/flannel/options.env src=/etc/ansible/flannel-config/flannel.env.j2
 
     - name: daemon-reload
       command: systemctl daemon-reload

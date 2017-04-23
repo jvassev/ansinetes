@@ -9,7 +9,7 @@ EnvironmentFile=-/etc/kubernetes/config.env
 EnvironmentFile=-/etc/kubernetes/apiserver.env
 User=kube
 
-ExecStart=/opt/kubernetes/bin/kube-apiserver \
+ExecStart=/opt/kubernetes/bin/hyperkube apiserver \
 	    $KUBE_LOGTOSTDERR \
 	    $KUBE_LOG_LEVEL \
 	    $KUBE_ETCD_SERVERS \

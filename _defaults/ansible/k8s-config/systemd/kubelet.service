@@ -9,7 +9,7 @@ WorkingDirectory=/var/lib/kubelet
 EnvironmentFile=-/etc/kubernetes/config.env
 EnvironmentFile=-/etc/kubernetes/kubelet.env
 
-ExecStart=/opt/kubernetes/bin/kubelet \
+ExecStart=/opt/kubernetes/bin/hyperkube kubelet \
 	    $KUBE_LOGTOSTDERR \
 	    $KUBE_LOG_LEVEL \
 	    $KUBELET_API_SERVER \

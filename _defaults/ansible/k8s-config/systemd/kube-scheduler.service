@@ -7,7 +7,7 @@ EnvironmentFile=-/etc/kubernetes/config.env
 EnvironmentFile=-/etc/kubernetes/scheduler.env
 User=kube
 
-ExecStart=/opt/kubernetes/bin/kube-scheduler \
+ExecStart=/opt/kubernetes/bin/hyperkube scheduler \
 	    $KUBE_LOGTOSTDERR \
 	    $KUBE_LOG_LEVEL \
 	    $KUBE_MASTER \
