@@ -6,6 +6,22 @@
   vars_files:
     - /etc/ansible/k8s-config/vars.yaml
 
+  vars:
+    addons:
+      - dashboard-controller.yaml
+      - dashboard-service.yaml
+      - kubedns-sa.yaml
+      - kubedns-controller.yaml
+      - kubedns-svc.yaml
+      - heapster-controller.yaml
+      - heapster-service.yaml
+      - ovpn-secrets.yaml
+      - ovpn-controller.yaml
+      - ovpn-service.yaml
+      - nginx-ingress.yaml
+      - default-backend-service.yaml
+      - default-backend.yaml
+
   tasks:
     - name: Start apiserver
       service:
@@ -45,19 +61,17 @@
     - name: Start apiserver-lb
       service: name=apiserver-lb.service state=started enabled=yes
 
+    - name: Render cluster add-ons locally
+      delegate_to: localhost
+      when: inventory_hostname == groups.apiservers[0]
+      become: False
+      template:
+      args:
+        src: /etc/ansible/k8s-config/addons/{{item}}.j2
+        dest: /tmp/ansible/{{item}}
+      with_items: "{{addons}}"
+
     - name: Start add-ons
       shell: "/opt/kubernetes/bin/kubectl {{kubectl_params}} create -f /etc/kubernetes/addons/{{item}} || echo Maybe already started"
       when: inventory_hostname == groups.apiservers[0]
-      with_items:
-        - dashboard-controller.yaml
-        - dashboard-service.yaml
-        - kubedns-controller.yaml
-        - kubedns-svc.yaml
-        - heapster-controller.yaml
-        - heapster-service.yaml
-        - ovpn-secrets.yaml
-        - ovpn-controller.yaml
-        - ovpn-service.yaml
-        - nginx-ingress.yaml
-        - default-backend-service.yaml
-        - default-backend.yaml
+      with_items: "{{addons}}"

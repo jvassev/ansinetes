@@ -10,6 +10,7 @@
     addons:
       - dashboard-controller.yaml
       - dashboard-service.yaml
+      - kubedns-sa.yaml
       - kubedns-controller.yaml
       - kubedns-svc.yaml
       - heapster-controller.yaml
@@ -60,7 +61,7 @@
       become: False
 
     - name: Extract binaries
-      command: /etc/ansible/books/extract-k8s.sh /tmp/ansible/kubernetes-{{kubernetes_install.version}}.tar.gz
+      command: /etc/ansible/books/extract-k8s.sh /tmp/ansible/kubernetes-{{kubernetes_install.version}}.tar.gz {{kubernetes_install.sha256[7:]}}
       args:
         chdir: /tmp/ansible
       when: inventory_hostname == play_hosts[0]
