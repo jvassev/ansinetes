@@ -35,6 +35,7 @@ KUBE_API_ARGS="\
 --etcd-prefix={{kubernetes_etcd_prefix}} \
 --storage-backend=etcd2 \
 --authorization-mode=ABAC \
+--anonymous-auth=false \
 --allow-privileged \
 --service-node-port-range={{kubernetes_service_port_range}} \
 --authorization-policy-file=/etc/kubernetes/kube-apiserver/policy.jsonl \
