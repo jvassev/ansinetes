@@ -1,8 +1,8 @@
 ---
 
 kubernetes_install:
-  version: v1.5.7
-  sha256: sha256:ae18d659811da316d4a8bbdce15c4396fdee0068f9d3247a72c3a23433fee44c
+  version: v1.6.7
+  sha256: sha256:1287bb85f1057eae53f8bb4e4475c990783e43d2f57ea1c551fdf2da7ca5345d
 
 ######### Not customizable, just reducing duplication
 etcdctl_params: --ca-file /etc/ssl/etcd/ca.pem --key-file /etc/ssl/etcd/client-key.pem --cert-file /etc/ssl/etcd/client.pem --endpoint https://localhost:2379
