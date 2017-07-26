@@ -1,6 +1,7 @@
 apiVersion: v1
 kind: ReplicationController
 metadata:
+  namespace: kube-system
   name: default-http-backend
 spec:
   replicas: 1
