@@ -22,8 +22,12 @@ It has already taken some decisions for you:
 curl -Ls -O https://raw.githubusercontent.com/jvassev/ansinetes/master/ansinetes
 chmod +x ansinetes
 ```
+# Supported versions
+* Kubernetes: 1.4.0 - 1.6.7 (you can control the k8s version deployed by editing the `k8s-config/vars.yaml` file)
+* CoreOS: this depends on the kubernetes version (which determines the earliest Docker it supports)
+* Docker (local): >= 1.10
 
-This script will pull an image from dockerhub with Ansible 2.x installed. On first run it will populate a local directory with playbooks and their supporting resources.
+This script will pull an image from dockerhub with Ansible 2.x installed. On first run it will populate a local directory with playbooks and supporting resources.
 
 # Booting a sensible Kubernetes cluster
 
@@ -98,7 +102,7 @@ networks lying around. That's fine unless you are going to communicate with the 
 of Defense](https://en.wikipedia.org/wiki/LogMeIn_Hamachi#Addressing). Flannel subnet can be configured.
 
 ## Install Kubernetes
-This step is the slowest as it downloads more than a 1G from Github.
+This step is the slowest as it downloads about 400MiB from Github.
 
 ```bash
 [ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/kubernetes-bootstrap.yaml
@@ -162,12 +166,13 @@ While in a shell (`-s`) the `ssh` command is configured with a custom ssh_config
 $ ./ansinetes -p demo -s -n web
 Welcome to ansinetes virtual environment "demo"
 $ [*demo:web*] ssh kbt-1
-CoreOS stable (1185.3.0)
-core@kbt-1 ~ $
+Failed to add the host to the list of known hosts (/home/ansinetes/.ssh/known_hosts).
+Last login: Wed Jul 26 19:01:01 UTC 2017 from 10.29.19.105 on ssh
+Container Linux by CoreOS stable (1409.7.0)
 
 ```
 
-Finally, for every ansinetes project a different bash history is maintained which is different from the default. This is a great timesaver when you are dealing with long and complex `kubectl` invocations. Also it may prevent accidents as the history contains entries valid only in the current /project/namespace.
+Finally, for every ansinetes project a separate bash history is maintained. This is a great timesaver when you are dealing with long and complex `kubectl` invocations. Also it may prevent accidents as the history would contain entries valid only in the current /project/namespace.
 
 # Deployment description
 When Vagrant is used there are 4 VMs being created. This can be changed by editing the vagrant/config.rb script. 3 nodes take part in the etcd quorum while the rest are proxies. There are two api-servers. Controller-manager and Scheduler run with `--leader-elect` option. Components that target the apiserver will talk to the first node from the 'apiservers' group (no HA here). The default `hosts` file describes the role mapping:
@@ -205,7 +210,7 @@ Api-server is started with `--authorization-mode=ABAC`. Have a look at the jsonl
 Every component authenticates to the apiserver using a private key under a service account (mapping the CN to the username). The default service account for the kube-system namespace has all privileges.
 Additionally an `admin` user is created and is used by `kubectl`. There is also username/password authentication configured for the admin user with default password `pass123`. You can change it or add other users to the file `token.csv` before bootstrapping the cluster.
 
-Thre can be many api-servers running at the same time. They run by default on the secure port 6442. On every node a ha-proxy is run (on 6443) that load balances between the available api-server. As a result kubelets go to https://localhost:6443 to locate the apiserver and you can scale up/down the number of api-servers almost transparently.
+There can be many api-servers running at the same time. They run by default on the secure port 6442. On every node a ha-proxy is run (on 6443) that load balances between the available api-server. As a result kubelets go to https://localhost:6443 to locate the apiserver and you can scale up/down the number of api-servers almost transparently.
 
 Only three add-ons are deployed: Dashboard, DNS and Heapster. The add-ons yamls may be touched a bit.
 
@@ -273,8 +278,6 @@ kubernetes_etcd_prefix: /registry
 public_iface: ansible_eth1
 ```
 
-Ansible must be configured to store facts in json files (the `fact_caching = jsonfile` setting). Facts are later used by the ansinetes script. If you expect facts to change just delete this directory and it will be populated next time a runbook is played.
-
 # Starting over
 Run any of the *-bootstrap playbooks as often as you like. After boostraping you may need to run the *-up or *-down playbooks. Runbooks try to be idempotent and do as little work as possible.
 
@@ -294,7 +297,7 @@ I also prefer naming the ansible hosts in order not to deal with IPs. The kubele
 
 # Why use ansinetes?
 You would find ansinetes useful if you:
-* want to test Kubernetes in an HA, multi-node deployment
+* want to test Kubernetes in an HA, multi-node deployment, a very specific version
 * you are in a somewhat contrainted environment and want to make best use of a static pool of machines
 * have some spare CoreOS VMs and want to quickly make a secure kube cluster with sensible config
 * want to try the Kubernetes bleeding edge and can't wait for the packages to arrive for your distro
@@ -306,7 +309,7 @@ You would find ansinetes useful if you:
 * Is federated Kubernetes supported? Not yet.
 
 # Known issues
-Ansible hangs sometimes when uploading files. You may need to Ctrl+C the run and re-run it.
+Ansible hangs sometimes when uploading large files. You may need to Ctrl+C the run and re-run it.
 
 # Resources
 * [Kubernetes from scratch](http://Kubernetes.io/v1.0/docs/getting-started-guides/scratch.html)
