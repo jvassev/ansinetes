@@ -400,7 +400,7 @@
       template:
       args:
         src: /etc/ansible/k8s-config/addons/ovpn-client.conf.j2
-        dest: /ansinetes/tmp/ovpn-client.conf
+        dest: /ansinetes/ovpn-client.conf
 
     - name: Configure ha-proxy
       template:
