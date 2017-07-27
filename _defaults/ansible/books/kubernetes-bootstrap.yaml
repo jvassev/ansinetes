@@ -110,7 +110,7 @@
     - name: Upload kubernetes binaries
       copy:
       args:
-        src: /tmp/ansible/k8s-bin/{{item}}
+        src: /tmp/ansible/{{kubernetes_install.sha256[7:]}}/{{item}}
         dest: /opt/kubernetes/bin
         owner: root
         mode: 0755
