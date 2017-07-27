@@ -3,6 +3,9 @@ nobind
 dev tun
 proto tcp
 
+up /etc/openvpn/update-resolv-conf
+down /etc/openvpn/update-resolv-conf
+
 remote-random
 {%for node in groups.all -%}
 remote {{hostvars[node][public_iface].ipv4.address}} {{ovpn.node_port}} tcp

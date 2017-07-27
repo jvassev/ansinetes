@@ -214,17 +214,17 @@ There can be many api-servers running at the same time. They run by default on t
 
 Only three add-ons are deployed: Dashboard, DNS and Heapster. The add-ons yamls may be touched a bit.
 
-While not technically an add-on an OpenVPN [service](https://github.com/jvassev/openvpn-k8s) is also deployed by default. During development it is sometimes very useful to make your workstation part of the Kubernetes service network. When you run the playbook `kubernetes-bootstrap.yaml` an openvpn client configuration is re-generated locally. You can then "join" the Kubernetes service network using:
+While not technically an add-on an OpenVPN [service](https://github.com/jvassev/openvpn-k8s) is also deployed by default. During development it is sometimes very useful to make your workstation part of the Kubernetes service network. When you run the playbook `kubernetes-bootstrap.yaml` an openvpn client configuration is re-generated locally. You can then "join" the Kubernetes service and pod network using:
 ```bash
-$ sudo openvpn ovpn-client.conf
+$ sudo openvpn --script-security 2 --config ovpn-client.conf
 Sun Sep 18 22:40:05 2016 OpenVPN 2.3.7 x86_64-pc-linux-gnu [SSL (OpenSSL)] [LZO] [EPOLL] [PKCS11] [MH] [IPv6] built on Jul  8 2015
 .....
 Sun Sep 18 22:40:08 2016 /sbin/ip addr add dev tun0 local 10.241.0.6 peer 10.241.0.5
 Sun Sep 18 22:40:08 2016 Initialization Sequence Completed
 ```
-Then, assuming you are running with the default config, you should be able to resolve the kube api-server:
+The file `ovpn-client.conf` is located in under tmp/ folder in the project. Then, assuming you are running with the default config, you should be able to resolve the kube api-server:
 ```bash
-$ nslookup kubernetes.default.svc.cluster.local 10.254.0.2
+$ nslookup kubernetes.default 10.254.0.2
 Server:     10.254.0.2
 Address:    10.254.0.2#53
 
@@ -234,7 +234,7 @@ Address: 10.254.0.1
 ```
 When the OpenVPN bridge is opened you can target the pod themselves. This is not something you would do in production but is worth having around when troubleshooting.
 
-OpenVPN client can be put in control of the DNS of your machine but it's highly OS-specific and it's not done here.
+OpenVPN client will also use the KubeDNS as your workstation DNS. You will be able to target any service by IP, any pod by it IP and also all services by their DNS name.
 
 For demo purposes an nginx-ingress controller runs on two nodes. You can change this by adding/removing hosts to the `ingress-edges` group in the `hosts` file.
 
