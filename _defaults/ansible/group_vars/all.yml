@@ -14,7 +14,6 @@ kubernetes_service_port_range: "30000-32767"
 
 kubernetes_dns:
   ip: "10.254.0.2"
-  replicas: 2
   domain: "cluster.local"
 
 registry:

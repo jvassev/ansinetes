@@ -4,6 +4,9 @@ kubernetes_install:
   version: v1.6.7
   sha256: sha256:1287bb85f1057eae53f8bb4e4475c990783e43d2f57ea1c551fdf2da7ca5345d
 
+helm_install:
+  version: v2.5.1
+
 ######### Not customizable, just reducing duplication
 etcdctl_params: --ca-file /etc/ssl/etcd/ca.pem --key-file /etc/ssl/etcd/client-key.pem --cert-file /etc/ssl/etcd/client.pem --endpoint https://localhost:2379
 locksmithctl_params: --etcd-cafile /etc/ssl/etcd/ca.pem --etcd-keyfile /etc/ssl/etcd/client-key.pem --etcd-certfile /etc/ssl/etcd/client.pem --endpoint https://localhost:2379
