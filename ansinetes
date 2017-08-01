@@ -125,6 +125,27 @@ if [ ! -f ${ANSINETES_PROJECT}/tmp/local-bin/etcdctl ]; then
 fi
 
 
+######## download helm
+if [ ! -f ${ANSINETES_PROJECT}/tmp/local-bin/helm ]; then
+  log Installing helm locally...
+
+  mkdir -p ${ANSINETES_PROJECT}/tmp/local-bin &> /dev/null || true
+  pushd ${ANSINETES_PROJECT}/tmp/local-bin &> /dev/null
+
+  HELM_VERSION=$(cat ${ANSINETES_PROJECT}/ansible/k8s-config/vars.yaml | sed -n '/helm_install/{n;p;n;p;n;p;}' | grep version | sed 's/.*version: *//')
+
+  if [ "$(uname)" == "Darwin" ]; then
+    curl -L -# https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-darwin-amd64.tar.gz -o ${ANSINETES_PROJECT}/tmp/helm.tar.gz
+    tar xzf ${ANSINETES_PROJECT}/tmp/helm.tar.gz --strip-components=1 &> /dev/null
+    chmod +x helm
+  else
+    curl -L -# https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-amd64.tar.gz -o ${ANSINETES_PROJECT}/tmp/helm.tar.gz
+    tar xzf ${ANSINETES_PROJECT}/tmp/helm.tar.gz --strip-components=1 &> /dev/null
+  fi
+
+  popd &> /dev/null
+fi
+
 ####### download kubectl
 if [ ! -f ${ANSINETES_PROJECT}/tmp/local-bin/kubectl ]; then
   log Installing kubectl locally...
@@ -216,6 +237,8 @@ export PS1="\${PS1}[${cyan}*${SHORT_NAME}:${DEFAULT_NS}*${no_color}] "
 
 kubectl config use-context ${ANSINETES_PROJECT} &> /dev/null
 source <(kubectl completion bash)
+
+source <(helm completion bash)
 
 alias ssh="ssh -F ${ssh_cfg}"
 export HISTFILE=${ANSINETES_PROJECT}/tmp/${DEFAULT_NS}-hist
