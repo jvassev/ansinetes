@@ -17,6 +17,9 @@ kubernetes_dns:
   replicas: 2
   domain: "cluster.local"
 
+registry:
+  ip: "10.254.0.3"
+
 ovpn:
   replicas: 2
   network: "10.241.0.0"

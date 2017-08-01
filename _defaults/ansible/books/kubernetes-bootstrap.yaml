@@ -20,6 +20,8 @@
       - ovpn-service.yaml
       - default-backend.yaml
       - default-backend-service.yaml
+      - registry-rc.yaml
+      - registry-svc.yaml
       - nginx-ingress.yaml
       - datadog.yaml
       - sysdig-daemonset.yaml

@@ -1,0 +1,21 @@
+---
+- name: Configure Docker
+
+  hosts: all
+
+  handlers:
+    - name: reload
+      command: systemctl daemon-reload
+
+    - name: restart
+      service: name=docker state=restarted
+
+  tasks:
+    - name: Create docker drop-in dir
+      file: state=directory path=/etc/systemd/system/docker.service.d
+
+    - name: Upload docker config file
+      template: dest=/etc/systemd/system/docker.service.d/20-registry.conf src=/etc/ansible/docker-config/20-registry.conf.j2
+      notify:
+        - reload
+        - restart

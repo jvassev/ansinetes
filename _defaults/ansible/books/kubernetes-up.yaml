@@ -21,6 +21,8 @@
       - nginx-ingress.yaml
       - default-backend-service.yaml
       - default-backend.yaml
+      - registry-rc.yaml
+      - registry-svc.yaml
 
   tasks:
     - name: Start apiserver
