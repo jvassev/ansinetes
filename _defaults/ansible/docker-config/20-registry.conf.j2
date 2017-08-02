@@ -1,2 +1,2 @@
 [Service]
-Environment=DOCKER_OPTS="--insecure-registry registry.kube-system.svc --insecure-registry registry.kube-system.svc.{{kubernetes_dns.domain}}"
+Environment=DOCKER_OPTS="--insecure-registry registry.kube-system.svc:5000"

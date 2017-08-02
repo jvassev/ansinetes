@@ -26,6 +26,7 @@ chmod +x ansinetes
 * Kubernetes: 1.4.0 - 1.6.7 (you can control the k8s version deployed by editing the `k8s-config/vars.yaml` file)
 * CoreOS: this depends on the kubernetes version (which determines the earliest Docker it supports)
 * Docker (local): >= 1.10
+* Helm >= 25.2
 
 This script will pull an image from dockerhub with Ansible 2.x installed. On first run it will populate a local directory with playbooks and supporting resources.
 
@@ -120,11 +121,13 @@ PLAY [Start kubernetes] ********************************************************
 ## Access your environment
 Now that your cluser is running in Vagrant it's time to access it. In another shell
 run `ansinetes -p demo -s` (-s for shell). It will start your $SHELL with a modified
-environment, changed $PATH, changed $PS1 and both `kubectl` and `etcdctl` preconfigured. The changed prompt contains the project name and the current namespace enclosed in **
+environment, changed $PATH, changed $PS1 and `helm `, `kubectl` and `etcdctl` preconfigured. The changed prompt contains the project name and the current namespace enclosed in **
 
 ```bash
 $ ./ansinetes -p demo -s
 Installing etcdctl locally...
+######################################################################## 100.0%
+Installing helm locally...
 ######################################################################## 100.0%
 Installing kubectl locally...
 ######################################################################## 100.0%

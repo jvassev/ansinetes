@@ -22,6 +22,7 @@
       - default-backend-service.yaml
       - registry-rc.yaml
       - registry-svc.yaml
+      - registry-ds.yaml
       - nginx-ingress.yaml
       - datadog.yaml
       - sysdig-daemonset.yaml

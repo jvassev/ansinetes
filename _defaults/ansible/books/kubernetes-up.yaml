@@ -23,6 +23,7 @@
       - default-backend.yaml
       - registry-rc.yaml
       - registry-svc.yaml
+      - registry-ds.yaml
 
   tasks:
     - name: Start apiserver
