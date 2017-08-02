@@ -3,6 +3,13 @@
 
   hosts: all
 
+  roles:
+    - role: ajsalminen.hosts
+      hosts_additional_hosts:
+        - address: 127.0.0.1
+          hostnames:
+            - registry.kube-system.svc
+
   handlers:
     - name: reload
       command: systemctl daemon-reload
