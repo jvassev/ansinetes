@@ -26,6 +26,8 @@ Usage: ansinetes ARGS
     -f, --file SCRIPT        Feeds SCRIPT to bash (with -s specified) or run
                                  it inside the container. Make sure  path is
                                  correct within container.
+    -u, --update             Updates ansinetes. Location must be writable by
+                                 current user.
     -h, --help               Shows this screen.
 EOF
 }
@@ -40,6 +42,7 @@ realpath() {
 START_SHELL=0
 DEFAULT_NS="default"
 RUN_FILE=""
+UPDATE=0
 
 readonly ETCD_VERSION=v2.3.7
 readonly ANSINETES_IMAGE=${ANSINETES_IMAGE:-jvassev/ansinetes}
@@ -68,6 +71,9 @@ while [[ $# -gt 0 ]]; do
       DEFAULT_NS="$2"
       shift
     ;;
+    -u|--update)
+    UPDATE=1
+    ;;
     *)
     die Unknown param $key
     ;;
@@ -75,7 +81,13 @@ while [[ $# -gt 0 ]]; do
   shift # past argument or value
 done
 
-if [ "${ANSINETES_PROJECT:-}" == "" ]; then
+if [[ $UPDATE == 1 ]]; then
+  docker rmi $ANSINETES_IMAGE || true
+  curl https://raw.githubusercontent.com/jvassev/ansinetes/master/ansinetes > ${BASH_SOURCE[0]}
+  exit 0
+fi
+
+if [[ "${ANSINETES_PROJECT:-}" == "" ]]; then
   die Project must be defined with -p or using \$ANSINETES_PROJECT var
 fi
 
@@ -84,10 +96,10 @@ ANSINETES_PROJECT=$(realpath ${ANSINETES_PROJECT})
 readonly SHORT_NAME=$(basename ${ANSINETES_PROJECT})
 
 
-if [ $START_SHELL == 0 ]; then
+if [[ $START_SHELL == 0 ]]; then
   INTERACTIVE="-ti"
 
-  if [ "$RUN_FILE" != "" ]; then
+  if [[ "$RUN_FILE" != "" ]]; then
     INTERACTIVE=""
   fi
 
@@ -103,7 +115,7 @@ fi
 
 
 ######## download etcdctl
-if [ ! -f ${ANSINETES_PROJECT}/tmp/local-bin/etcdctl ]; then
+if [[ ! -f ${ANSINETES_PROJECT}/tmp/local-bin/etcdctl ]]; then
   log Installing etcdctl locally...
 
   mkdir -p ${ANSINETES_PROJECT}/tmp/local-bin &> /dev/null || true

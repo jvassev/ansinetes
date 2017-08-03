@@ -1,8 +1,8 @@
 ---
-
+# Get versions from here https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG.md
 kubernetes_install:
-  version: v1.6.7
-  sha256: sha256:1287bb85f1057eae53f8bb4e4475c990783e43d2f57ea1c551fdf2da7ca5345d
+  version: v1.6.8
+  sha256: sha256:9bf31375917ffdf9a9437ed562e96a1e2b43e23dcb4a42204032bb289ff12b6d
 
 helm_install:
   version: v2.5.1

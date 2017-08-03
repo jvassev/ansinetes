@@ -11,6 +11,6 @@ fi
 
 tar vxzf $TGZ
 
-mv -v kubernetes/server/bin/{kubeadm,kubectl,hyperkube} ${K8S_DIR}
+mv -v kubernetes/server/bin/{kubeadm,kubectl,hyperkube,kubeadm} ${K8S_DIR}
 
 rm kubernetes -fr
