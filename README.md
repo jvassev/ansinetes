@@ -92,6 +92,16 @@ Etcd is essential both to Kubernetes and flannel. Ansinetes will deploy a 3-node
 PLAY [Bootstrap etcd cluster] **************************************************
 ...
 ```
+
+## Configure Docker
+Docker needs to be configured too, for example setting insecure registries. The `docker-bootstrap.yaml` book insertes a systemd drop-in file. You can add additional configs by editing `docker-config/20-registry.conf.j2` file.
+
+```bash
+[ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/docker-bootstrap.yaml
+PLAY [Configure Docker] ********************************************************
+...
+```
+
 ## Configure flannel
 ```bash
 [ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/flannel-bootstrap.yaml
@@ -215,7 +225,7 @@ Additionally an `admin` user is created and is used by `kubectl`. There is also 
 
 There can be many api-servers running at the same time. They run by default on the secure port 6442. On every node a ha-proxy is run (on 6443) that load balances between the available api-server. As a result kubelets go to https://localhost:6443 to locate the apiserver and you can scale up/down the number of api-servers almost transparently.
 
-Only three add-ons are deployed: Dashboard, DNS and Heapster. The add-ons yamls may be touched a bit.
+Only four add-ons are deployed: Dashboard, DNS, Heapster and Registry. The add-ons yamls may be touched a bit and made to work with ansible.
 
 While not technically an add-on an OpenVPN [service](https://github.com/jvassev/openvpn-k8s) is also deployed by default. During development it is sometimes very useful to make your workstation part of the Kubernetes service network. When you run the playbook `kubernetes-bootstrap.yaml` an openvpn client configuration is re-generated locally. You can then "join" the Kubernetes service and pod network using:
 ```bash
@@ -239,7 +249,9 @@ When the OpenVPN bridge is opened you can target the pod themselves. This is not
 
 OpenVPN client will also use the KubeDNS as your workstation DNS. You will be able to target any service by IP, any pod by it IP and also all services by their DNS name.
 
-For demo purposes an nginx-ingress controller runs on two nodes. You can change this by adding/removing hosts to the `ingress-edges` group in the `hosts` file.
+For demo purposes an nginx-ingress controller is also run. More nodes can serve as ingress-edges - just add them to the `ingress-edges` group in the `hosts` file.
+
+A docker registry is run in insecure mode. It is accessible at `registry.kube-system.svc:5000`. Once connected to the VPN you can push the registry if you add `--insecure-registry registry.kube-system.svc:5000` to you local docker config. This configuration is applied to all kubelet nodes so the same image name can be used in pod specs.
 
 Ansinetes will also deploy DataDog and Sysdig daemonsets if enabled in the configuration. The yaml files are kept close the original versions, only the API key is set (and occasionally a bug fixed). If you wish to enable/disable these services run kubernetes-bootstrap.yaml again.
 
@@ -294,7 +306,7 @@ Delete the security/ca.pem file, security/certs/* and run kt-ca-init again. The 
 Run the playbook `ssh-keys-rotate.yaml`. This will prevent ansible from talking to your vms unless you update the `vagrant/user-data` file with the security/new ansible-ssh-key.pub before the next reboot.
 
 # Recommended workflow
-The project directory fully captures the cluster config state including the Ansible scripts and Kubernetes customization. You can keep it under source control. You can later change the playbooks and/or the `hosts` file. The `ansinetes` script is guarateed to work with somewhat modified project defaults.
+The project directory fully captures the cluster config state including the Ansible scripts and Kubernetes customization. You can keep it under source control. You can later change the playbooks and/or the `hosts` file. The `ansinetes` script is guaranteed to work with somewhat modified project defaults.
 
 I also prefer naming the ansible hosts in order not to deal with IPs. The kubelets assigns a label "ansinetes:{name}" to the nodes for usability. But really, every way is the right way as long as the hosts file contains the required groups.
 
@@ -305,6 +317,7 @@ You would find ansinetes useful if you:
 * have some spare CoreOS VMs and want to quickly make a secure kube cluster with sensible config
 * want to try the Kubernetes bleeding edge and can't wait for the packages to arrive for your distro
 * want to painlessly try out obscure Kubernetes options
+* want to the best debug experience in Kubernetes (private registry and full access to both the pod and the service networks)
 
 # FAQ
 * Why CoreOS? Because it nicely integrates docker with flannel. With a little extra work you could run ansinetes on every systemd-compatible distro.
