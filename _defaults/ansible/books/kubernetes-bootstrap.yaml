@@ -110,6 +110,20 @@
         - /etc/kubernetes/kube-controller-manager
         - /etc/haproxy
 
+    - name: Upload binary wrappers
+      get_url:
+      args:
+        url: "{{item.src}}"
+        dest: "{{item.dest}}"
+        owner: root
+        mode: 0755
+      with_items:
+        - src: https://raw.githubusercontent.com/ceph/ceph-docker/master/examples/kubernetes-coreos/rbd
+          dest: /opt/kubernetes/bin/rbd
+        - src: https://github.com/andrew-d/static-binaries/raw/master/binaries/linux/x86_64/socat
+          dest: /opt/kubernetes/bin/socat
+
+
     - name: Upload kubernetes binaries
       copy:
       args:
