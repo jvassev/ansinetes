@@ -5,9 +5,8 @@ After=docker.service
 Requires=docker.service
 
 [Service]
-WorkingDirectory=/var/lib/kubelet
-EnvironmentFile=-/etc/kubernetes/config.env
-EnvironmentFile=-/etc/kubernetes/kubelet.env
+EnvironmentFile=-/etc/kubernetes/conf/config.env
+EnvironmentFile=-/etc/kubernetes/conf/kubelet.env
 
 ExecStart=/opt/kubernetes/bin/hyperkube kubelet \
 	    $KUBE_LOGTOSTDERR \

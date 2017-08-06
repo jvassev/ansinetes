@@ -8,7 +8,7 @@
 # Add your own!
 KUBE_CONTROLLER_MANAGER_ARGS="\
 --leader-elect \
---kubeconfig=/etc/kubernetes/kube-controller-manager/config \
---root-ca-file=/etc/kubernetes/ca.pem \
---service-account-private-key-file=/etc/kubernetes/kube-controller-manager/sa-key.pem \
+--kubeconfig=/etc/kubernetes/conf/controller-manager.config \
+--root-ca-file=/etc/kubernetes/ssl/ca.pem \
+--service-account-private-key-file=/etc/kubernetes/ssl/sa-key.pem \
 "

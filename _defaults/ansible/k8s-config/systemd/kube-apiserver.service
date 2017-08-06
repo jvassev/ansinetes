@@ -5,9 +5,8 @@ After=network.target
 After=etcd2.service
 
 [Service]
-EnvironmentFile=-/etc/kubernetes/config.env
-EnvironmentFile=-/etc/kubernetes/apiserver.env
-User=kube
+EnvironmentFile=-/etc/kubernetes/conf/config.env
+EnvironmentFile=-/etc/kubernetes/conf/apiserver.env
 
 ExecStart=/opt/kubernetes/bin/hyperkube apiserver \
 	    $KUBE_LOGTOSTDERR \

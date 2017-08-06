@@ -63,33 +63,13 @@
       delegate_to: localhost
       become: False
 
-    - name: Extract binaries
+    - name: Extract binaries locally
       command: /etc/ansible/books/extract-k8s.sh /tmp/ansible/kubernetes-{{kubernetes_install.version}}.tar.gz {{kubernetes_install.sha256[7:]}}
       args:
         chdir: /tmp/ansible
       when: inventory_hostname == play_hosts[0]
       delegate_to: localhost
       become: False
-
-    - name: Create kube user
-      user:
-      args:
-        name: kube
-        shell: /usr/sbin/nologin
-        groups: docker
-        append: yes
-        home: /var/lib/kubelet
-        system: yes
-
-    - name: Create kube user dirs
-      file:
-      args:
-        path: "{{item}}"
-        state: directory
-        owner: kube
-        mode: 0755
-      with_items:
-        - /var/run/kubernetes
 
     - name: Create kubernetes dirs
       file:
@@ -99,30 +79,12 @@
         owner: root
         mode: 0755
       with_items:
-        - /opt/kubernetes
-        - /opt/kubernetes/bin
-        - /etc/kubernetes
-        - /etc/kubernetes/addons
-        - /etc/kubernetes/kube-apiserver
-        - /etc/kubernetes/kube-proxy
-        - /etc/kubernetes/kubelet
-        - /etc/kubernetes/kube-scheduler
-        - /etc/kubernetes/kube-controller-manager
         - /etc/haproxy
-
-    - name: Upload binary wrappers
-      get_url:
-      args:
-        url: "{{item.src}}"
-        dest: "{{item.dest}}"
-        owner: root
-        mode: 0755
-      with_items:
-        - src: https://raw.githubusercontent.com/ceph/ceph-docker/master/examples/kubernetes-coreos/rbd
-          dest: /opt/kubernetes/bin/rbd
-        - src: https://github.com/andrew-d/static-binaries/raw/master/binaries/linux/x86_64/socat
-          dest: /opt/kubernetes/bin/socat
-
+        - /etc/kubernetes/addons
+        - /etc/kubernetes/conf
+        - /etc/kubernetes/manifests
+        - /etc/kubernetes/ssl
+        - /opt/kubernetes/bin
 
     - name: Upload kubernetes binaries
       copy:
@@ -145,7 +107,7 @@
       copy:
       args:
         src: /etc/ansible/k8s-config/policy.jsonl
-        dest: /etc/kubernetes/kube-apiserver/policy.jsonl
+        dest: /etc/kubernetes/conf/policy.jsonl
       notify:
         - restart-apiserver
 
@@ -169,30 +131,28 @@
         - restart-apiserver
 
     - name: Create apiserver certificate
-      command: "kt-server-cert-create -h {{kubernetes_apiserver_ip}},localhost,127.0.0.1,{%for name in groups.apiservers%}{{hostvars[name][public_iface].ipv4.address}}{%if not loop.last%},{%endif%}{%endfor%} kube-apiserver-server"
+      command: "kt-server-cert-create -h {{kubernetes_apiserver_ip}},localhost,127.0.0.1,{%for name in groups.apiservers%}{{hostvars[name][public_iface].ipv4.address}}{%if not loop.last%},{%endif%}{%endfor%} apiserver"
       delegate_to: localhost
       when: inventory_hostname == play_hosts[0]
       args:
-        creates: /ansinetes/security/certs/kube-apiserver-server.pem
+        creates: /ansinetes/security/certs/apiserver.pem
       become: False
 
     - name: Upload ca file
       copy:
       args:
         src: /ansinetes/security/ca.pem
-        dest: /etc/kubernetes/ca.pem
+        dest: /etc/kubernetes/ssl/ca.pem
 
     - name: Upload apiserver certificates
       copy:
       args:
-        src: "/ansinetes/security/certs/{{item.src}}"
-        dest: /etc/kubernetes/kube-apiserver/{{item.dest}}
+        src: /ansinetes/security/certs/{{item}}
+        dest: /etc/kubernetes/ssl/{{item}}
         owner: root
       with_items:
-        - src: "kube-apiserver-server.pem"
-          dest: server.pem
-        - src: "kube-apiserver-server-key.pem"
-          dest: server-key.pem
+        - apiserver.pem
+        - apiserver-key.pem
       notify:
         - restart-apiserver
 
@@ -213,26 +173,22 @@
     - name: Upload kube-proxy client certificates
       copy:
       args:
-        src: /ansinetes/security/certs/{{item.src}}
-        dest: /etc/kubernetes/kube-proxy/{{item.dest}}
+        src: /ansinetes/security/certs/{{item}}
+        dest: /etc/kubernetes/ssl/{{item}}
       with_items:
-        - src: proxy.pem
-          dest: client.pem
-        - src: proxy-key.pem
-          dest: client-key.pem
+        - proxy.pem
+        - proxy-key.pem
       notify:
         - restart-proxy
 
     - name: Upload kubelet client certificates
       copy:
       args:
-        src: /ansinetes/security/certs/{{item.src}}
-        dest: /etc/kubernetes/kubelet/{{item.dest}}
+        src: /ansinetes/security/certs/{{item}}
+        dest: /etc/kubernetes/ssl/{{item}}
       with_items:
-        - src: kubelet.pem
-          dest: client.pem
-        - src: kubelet-key.pem
-          dest: client-key.pem
+        - kubelet.pem
+        - kubelet-key.pem
       notify:
         - restart-kubelet
 
@@ -240,26 +196,22 @@
     - name: Upload scheduler client certificates
       copy:
       args:
-        src: /ansinetes/security/certs/{{item.src}}
-        dest: /etc/kubernetes/kube-scheduler/{{item.dest}}
+        src: /ansinetes/security/certs/{{item}}
+        dest: /etc/kubernetes/ssl/{{item}}
       with_items:
-        - src: scheduler.pem
-          dest: client.pem
-        - src: scheduler-key.pem
-          dest: client-key.pem
+        - scheduler.pem
+        - scheduler-key.pem
       notify:
         - restart-scheduler
 
     - name: Upload controller-manager client certificates
       copy:
       args:
-        src: /ansinetes/security/certs/{{item.src}}
-        dest: /etc/kubernetes/kube-controller-manager/{{item.dest}}
+        src: /ansinetes/security/certs/{{item}}
+        dest: /etc/kubernetes/ssl/{{item}}
       with_items:
-        - src: controller-manager.pem
-          dest: client.pem
-        - src: controller-manager-key.pem
-          dest: client-key.pem
+        - controller-manager.pem
+        - controller-manager-key.pem
       notify:
         - restart-controller-manager
 
@@ -274,13 +226,11 @@
     - name: Upload service account keys
       copy:
       args:
-        src: "{{item.src}}"
-        dest: "{{item.dest}}"
+        src: /ansinetes/security/certs/{{item}}
+        dest: /etc/kubernetes/ssl/{{item}}
       with_items:
-        - src: /ansinetes/security/certs/sa.pem
-          dest: /etc/kubernetes/kube-apiserver/sa.pem
-        - src: /ansinetes/security/certs/sa-key.pem
-          dest: /etc/kubernetes/kube-controller-manager/sa-key.pem
+        - sa.pem
+        - sa-key.pem
       notify:
         - restart-controller-manager
         - restart-apiserver
@@ -289,24 +239,20 @@
       copy:
       args:
         src: /etc/ansible/k8s-config/token.csv
-        dest: /etc/kubernetes/token.csv
+        dest: /etc/kubernetes/conf/token.csv
       notify:
         - restart-apiserver
 
     - name: Render kubecfg's
       template:
       args:
-        src: /etc/ansible/k8s-config/kubeconfig/{{item.src}}
-        dest: /etc/kubernetes/{{item.dest}}
+        src: /etc/ansible/k8s-config/kubeconfig/{{item}}.j2
+        dest: /etc/kubernetes/conf/{{item}}.config
       with_items:
-        - src: kubelet.j2
-          dest: kubelet/config
-        - src: proxy.j2
-          dest: kube-proxy/config
-        - src: scheduler.j2
-          dest: kube-scheduler/config
-        - src: controller-manager.j2
-          dest: kube-controller-manager/config
+        - kubelet
+        - proxy
+        - scheduler
+        - controller-manager
       notify:
         - restart-kubelet
         - restart-proxy
@@ -317,7 +263,7 @@
       template:
       args:
         src: /etc/ansible/k8s-config/{{item}}.j2
-        dest: /etc/kubernetes/{{item}}.env
+        dest: /etc/kubernetes/conf/{{item}}.env
       with_items:
         - config
       notify:
@@ -327,51 +273,51 @@
         - restart-controller-manager
         - restart-apiserver
 
-    - name: Render apiserver.env files
+    - name: Render apiserver.env file
       template:
       args:
         src: /etc/ansible/k8s-config/{{item}}.j2
-        dest: /etc/kubernetes/{{item}}.env
+        dest: /etc/kubernetes/conf/{{item}}.env
       with_items:
         - apiserver
       notify:
         - restart-apiserver
 
-    - name: Render controller-manager.env files
+    - name: Render controller-manager.env file
       template:
       args:
         src: /etc/ansible/k8s-config/{{item}}.j2
-        dest: /etc/kubernetes/{{item}}.env
+        dest: /etc/kubernetes/conf/{{item}}.env
       with_items:
         - controller-manager
       notify:
         - restart-controller-manager
 
-    - name: Render kubelet.env files
+    - name: Render kubelet.env file
       template:
       args:
         src: /etc/ansible/k8s-config/{{item}}.j2
-        dest: /etc/kubernetes/{{item}}.env
+        dest: /etc/kubernetes/conf/{{item}}.env
       with_items:
         - kubelet
       notify:
         - restart-kubelet
 
-    - name: Render proxy.env files
+    - name: Render proxy.env file
       template:
       args:
         src: /etc/ansible/k8s-config/{{item}}.j2
-        dest: /etc/kubernetes/{{item}}.env
+        dest: /etc/kubernetes/conf/{{item}}.env
       with_items:
         - proxy
       notify:
         - restart-proxy
 
-    - name: Render scheduler.env files
+    - name: Render scheduler.env file
       template:
       args:
         src: /etc/ansible/k8s-config/{{item}}.j2
-        dest: /etc/kubernetes/{{item}}.env
+        dest: /etc/kubernetes/conf/{{item}}.env
       with_items:
         - scheduler
       notify:

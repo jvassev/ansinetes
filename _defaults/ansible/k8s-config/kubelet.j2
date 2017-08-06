@@ -13,8 +13,6 @@ KUBELET_PORT="--port=10250"
 # You may leave this blank to use the actual hostname
 KUBELET_HOSTNAME="--hostname-override={{ipv4address}}"
 
-# location of the api-server
-KUBELET_API_SERVER="--api-servers=https://localhost:6443"
 
 {%set node_labels = "--node-labels=ansible_hostname=" + inventory_hostname -%}
 {%if ansible_local.vmware.moid -%}
@@ -26,10 +24,12 @@ KUBELET_API_SERVER="--api-servers=https://localhost:6443"
 
 # Add your own!
 KUBELET_ARGS="\
+--register-node \
+--require-kubeconfig \
 --cluster-dns={{kubernetes_dns.ip}} \
 --serialize-image-pulls=false \
 --allow-privileged \
 --cluster-domain={{kubernetes_dns.domain}} \
---kubeconfig=/etc/kubernetes/kubelet/config \
+--kubeconfig=/etc/kubernetes/conf/kubelet.config \
 {{node_labels}} \
 "

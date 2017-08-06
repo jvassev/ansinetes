@@ -38,10 +38,10 @@ KUBE_API_ARGS="\
 --anonymous-auth=false \
 --allow-privileged \
 --service-node-port-range={{kubernetes_service_port_range}} \
---authorization-policy-file=/etc/kubernetes/kube-apiserver/policy.jsonl \
---tls-cert-file=/etc/kubernetes/kube-apiserver/server.pem \
---tls-private-key-file=/etc/kubernetes/kube-apiserver/server-key.pem \
---client-ca-file=/etc/kubernetes/ca.pem \
---service-account-key-file=/etc/kubernetes/kube-apiserver/sa.pem \
---basic-auth-file=/etc/kubernetes/token.csv \
+--authorization-policy-file=/etc/kubernetes/conf/policy.jsonl \
+--tls-cert-file=/etc/kubernetes/ssl/apiserver.pem \
+--tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem \
+--client-ca-file=/etc/kubernetes/ssl/ca.pem \
+--service-account-key-file=/etc/kubernetes/ssl/sa.pem \
+--basic-auth-file=/etc/kubernetes/conf/token.csv \
 "

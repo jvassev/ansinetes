@@ -3,9 +3,8 @@ Description=Kubernetes Scheduler Plugin
 Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 
 [Service]
-EnvironmentFile=-/etc/kubernetes/config.env
-EnvironmentFile=-/etc/kubernetes/scheduler.env
-User=kube
+EnvironmentFile=-/etc/kubernetes/conf/config.env
+EnvironmentFile=-/etc/kubernetes/conf/scheduler.env
 
 ExecStart=/opt/kubernetes/bin/hyperkube scheduler \
 	    $KUBE_LOGTOSTDERR \

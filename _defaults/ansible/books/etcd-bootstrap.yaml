@@ -3,6 +3,10 @@
 
   hosts: all
 
+  handlers:
+    - name: restart-etcd2
+      service: name=etcd2 state=restarted enabled=yes
+
   tasks:
     - name: Create ssl dir
       file: state=directory path=/etc/ssl/etcd/
@@ -46,6 +50,8 @@
           dest: "client-key.pem"
         - src: "certs/etcd-client.pem"
           dest: "client.pem"
+      notify:
+        - restart-etcd2
 
     - name: Create drop-in dir
       file: dest={{item}} state=directory
@@ -56,9 +62,13 @@
 
     - name: Upload config file for etcd2
       copy: src=/etc/ansible/etcd-config/etcd2.conf dest=/etc/systemd/system/etcd2.service.d/30-ansible.conf
+      notify:
+        - restart-etcd2
 
     - name: Upload config file to /etc/etcd2/env
       template: src=/etc/ansible/etcd-config/config-bootstrap.j2 dest=/etc/etcd2/env
+      notify:
+        - restart-etcd2
 
     - name: Upload config file for locksmithd
       copy: src=/etc/ansible/etcd-config/locksmithd.conf dest=/etc/systemd/system/locksmithd.service.d/30-ansible.conf
