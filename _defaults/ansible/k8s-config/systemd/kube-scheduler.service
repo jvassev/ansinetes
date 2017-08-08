@@ -7,7 +7,7 @@ Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 [Service]
 EnvironmentFile=/etc/kubernetes/conf/config.env
 EnvironmentFile=-/etc/kubernetes/conf/scheduler.env
-Environment="RKT_RUN_ARGS=--net=host"
+Environment="RKT_RUN_ARGS=--net=host --uuid-file-save=/var/run/%p-pod.uuid"
 Environment="KUBELET_IMAGE_ARGS=--exec=/scheduler"
 
 ExecStartPre=-/usr/bin/rkt rm --uuid-file=/var/run/%p-pod.uuid

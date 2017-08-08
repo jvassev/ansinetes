@@ -7,7 +7,7 @@ Requires=docker.service
 [Service]
 EnvironmentFile=/etc/kubernetes/conf/config.env
 EnvironmentFile=-/etc/kubernetes/conf/kubelet.env
-Environment="RKT_RUN_ARGS=--net=host --uuid-file-save=/var/run/%n-pod.uuid \
+Environment="RKT_RUN_ARGS=--net=host --uuid-file-save=/var/run/%p-pod.uuid \
 --volume=resolv,kind=host,source=/etc/resolv.conf,readOnly=true \
 --mount volume=resolv,target=/etc/resolv.conf \
 --volume modprobe,kind=host,source=/usr/sbin/modprobe \
