@@ -6,7 +6,7 @@ Ansinetes may not exhibit Ansible best practices but is a good starting point to
 
 It has already taken some decisions for you:
 * Uses CoreOS
-* Installs Kubernetes from the binary relase on Github
+* Uses CoreOS version of Kubernetes in the form of [kubelet-wrapper](https://coreos.com/kubernetes/docs/latest/kubelet-wrapper.html)
 * Uses flannel for the pod overlay network
 * Configures TLS everywhere possible
 * Prepares CoreOS to mount NFS shares
@@ -23,10 +23,10 @@ curl -Ls -O https://raw.githubusercontent.com/jvassev/ansinetes/master/ansinetes
 chmod +x ansinetes
 ```
 # Supported versions
-* Kubernetes: 1.4.0 - 1.6.7 (you can control the k8s version deployed by editing the `k8s-config/vars.yaml` file)
+* Kubernetes: 1.4.0 - 1.6.8 (you can control the k8s version deployed by editing the `k8s-config/vars.yaml` file)
 * CoreOS: this depends on the kubernetes version (which determines the earliest Docker it supports)
 * Docker (local): >= 1.10
-* Helm >= 25.2
+* Helm >= 2.5
 
 This script will pull an image from dockerhub with Ansible 2.x installed. On first run it will populate a local directory with playbooks and supporting resources.
 
@@ -59,7 +59,7 @@ $ vagrant up
 ...
 ```
 
-## Preparing CoreOS
+## Prepare CoreOS for Ansible
 CoreOS is usually configured using cloud-config but as a dev you are going to iterate faster if you stop/reconfigure/start your services, not the VMs. CoreOS needs to first be made [Ansible-compatible](https://galaxy.ansible.com/defunctzombie/coreos-bootstrap/). Luckily, this can be accomplished within Ansible itself.
 
 ```bash
@@ -113,7 +113,7 @@ networks lying around. That's fine unless you are going to communicate with the 
 of Defense](https://en.wikipedia.org/wiki/LogMeIn_Hamachi#Addressing). Flannel subnet can be configured.
 
 ## Install Kubernetes
-This step is the slowest as it downloads about 400MiB from Github.
+This step will install systemd units for every Kubernetes service on the nodes.
 
 ```bash
 [ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/kubernetes-bootstrap.yaml
@@ -180,7 +180,6 @@ $ ./ansinetes -p demo -s -n web
 Welcome to ansinetes virtual environment "demo"
 $ [*demo:web*] ssh kbt-1
 Failed to add the host to the list of known hosts (/home/ansinetes/.ssh/known_hosts).
-Last login: Wed Jul 26 19:01:01 UTC 2017 from 10.29.19.105 on ssh
 Container Linux by CoreOS stable (1409.7.0)
 
 ```
@@ -251,7 +250,7 @@ OpenVPN client will also use the KubeDNS as your workstation DNS. You will be ab
 
 For demo purposes an nginx-ingress controller is also run. More nodes can serve as ingress-edges - just add them to the `ingress-edges` group in the `hosts` file.
 
-A docker registry is run in insecure mode. It is accessible at `registry.kube-system.svc:5000`. Once connected to the VPN you can push the registry if you add `--insecure-registry registry.kube-system.svc:5000` to you local docker config. This configuration is applied to all kubelet nodes so the same image name can be used in pod specs.
+A docker registry is run in insecure mode. It is accessible at `registry.kube-system.svc:5000`: both from the kubelets and from the pod network. Once connected to the VPN you can push the registry if you add `--insecure-registry registry.kube-system.svc:5000` to you local docker config. This configuration is applied to all kubelet nodes so the same image name can be used in pod specs.
 
 Ansinetes will also deploy DataDog and Sysdig daemonsets if enabled in the configuration. The yaml files are kept close the original versions, only the API key is set (and occasionally a bug fixed). If you wish to enable/disable these services run kubernetes-bootstrap.yaml again.
 

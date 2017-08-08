@@ -5,19 +5,25 @@ After=docker.service
 Requires=docker.service
 
 [Service]
-EnvironmentFile=-/etc/kubernetes/conf/config.env
+EnvironmentFile=/etc/kubernetes/conf/config.env
 EnvironmentFile=-/etc/kubernetes/conf/kubelet.env
+Environment="RKT_RUN_ARGS=--net=host --uuid-file-save=/var/run/%n-pod.uuid \
+--volume=resolv,kind=host,source=/etc/resolv.conf,readOnly=true \
+--mount volume=resolv,target=/etc/resolv.conf \
+--volume modprobe,kind=host,source=/usr/sbin/modprobe \
+--mount volume=modprobe,target=/usr/sbin/modprobe"
 
-ExecStart=/opt/kubernetes/bin/hyperkube kubelet \
+ExecStartPre=/usr/bin/mkdir -p /var/log/containers
+ExecStartPre=-/usr/bin/rkt rm --uuid-file=/var/run/%p-pod.uuid
+ExecStart=/usr/lib/coreos/kubelet-wrapper \
 	    $KUBE_LOGTOSTDERR \
 	    $KUBE_LOG_LEVEL \
-	    $KUBELET_API_SERVER \
 	    $KUBELET_ADDRESS \
 	    $KUBELET_PORT \
 	    $KUBELET_HOSTNAME \
-	    $KUBE_ALLOW_PRIV \
 	    $KUBELET_ARGS
 
+ExecStop=-/usr/bin/rkt stop --uuid-file=/var/run/%p-pod.uuid
 Restart=on-failure
 RestartSec=10
 KillMode=process

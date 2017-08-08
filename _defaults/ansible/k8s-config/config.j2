@@ -16,5 +16,6 @@ KUBE_LOGTOSTDERR="--logtostderr=true"
 # journal message level, 0 is debug
 KUBE_LOG_LEVEL="--v=2"
 
-# Should this cluster be allowed to run privileged docker containers
-KUBE_ALLOW_PRIV="--allow-privileged=false"
+# Control the actual k8s version
+# https://coreos.com/kubernetes/docs/latest/kubelet-wrapper.html
+KUBELET_IMAGE_TAG={{kubernetes_install.tag}}

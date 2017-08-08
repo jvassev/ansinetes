@@ -2,15 +2,20 @@
 Description=Kubernetes Controller Manager
 Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 
-[Service]
-EnvironmentFile=-/etc/kubernetes/conf/config.env
-EnvironmentFile=-/etc/kubernetes/conf/controller-manager.env
 
-ExecStart=/opt/kubernetes/bin/hyperkube controller-manager \
+
+[Service]
+EnvironmentFile=/etc/kubernetes/conf/config.env
+EnvironmentFile=-/etc/kubernetes/conf/controller-manager.env
+Environment="RKT_RUN_ARGS=--net=host"
+Environment="KUBELET_IMAGE_ARGS=--exec=/controller-manager"
+
+ExecStartPre=-/usr/bin/rkt rm --uuid-file=/var/run/%p-pod.uuid
+ExecStart=/usr/lib/coreos/kubelet-wrapper \
 	    $KUBE_LOGTOSTDERR \
 	    $KUBE_LOG_LEVEL \
-	    $KUBE_MASTER \
 	    $KUBE_CONTROLLER_MANAGER_ARGS
+ExecStop=-/usr/bin/rkt stop --uuid-file=/var/run/%p-pod.uuid
 
 Restart=on-failure
 RestartSec=10

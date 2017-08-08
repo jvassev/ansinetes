@@ -26,10 +26,13 @@ KUBELET_HOSTNAME="--hostname-override={{ipv4address}}"
 KUBELET_ARGS="\
 --register-node \
 --require-kubeconfig \
+--node-ip={{ipv4address}} \
 --cluster-dns={{kubernetes_dns.ip}} \
 --serialize-image-pulls=false \
 --allow-privileged \
 --cluster-domain={{kubernetes_dns.domain}} \
 --kubeconfig=/etc/kubernetes/conf/kubelet.config \
+--anonymous-auth=false \
+--client-ca-file=/etc/kubernetes/ssl/ca.pem \
 {{node_labels}} \
 "

@@ -44,4 +44,6 @@ KUBE_API_ARGS="\
 --client-ca-file=/etc/kubernetes/ssl/ca.pem \
 --service-account-key-file=/etc/kubernetes/ssl/sa.pem \
 --basic-auth-file=/etc/kubernetes/conf/token.csv \
+--kubelet-client-certificate=/etc/kubernetes/ssl/apiserver2kubelet.pem \
+--kubelet-client-key=/etc/kubernetes/ssl/apiserver2kubelet-key.pem \
 "

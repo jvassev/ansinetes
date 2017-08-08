@@ -3,14 +3,19 @@ Description=Kubernetes Kube-Proxy Server
 Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 After=network.target
 
-[Service]
-EnvironmentFile=-/etc/kubernetes/conf/config.env
-EnvironmentFile=-/etc/kubernetes/conf/proxy.env
 
-ExecStart=/opt/kubernetes/bin/hyperkube proxy \
+[Service]
+EnvironmentFile=/etc/kubernetes/conf/config.env
+EnvironmentFile=-/etc/kubernetes/conf/proxy.env
+Environment="RKT_RUN_ARGS=--net=host"
+Environment="KUBELET_IMAGE_ARGS=--exec=/proxy"
+
+ExecStartPre=-/usr/bin/rkt rm --uuid-file=/var/run/%p-pod.uuid
+ExecStart=/usr/lib/coreos/kubelet-wrapper \
 	    $KUBE_LOGTOSTDERR \
 	    $KUBE_LOG_LEVEL \
 	    $KUBE_PROXY_ARGS
+ExecStop=-/usr/bin/rkt stop --uuid-file=/var/run/%p-pod.uuid
 
 Restart=on-failure
 RestartSec=10

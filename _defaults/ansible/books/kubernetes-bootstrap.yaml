@@ -53,24 +53,6 @@
       when: inventory_hostname in groups['controller-managers'] and not controller_needs_restart.changed
 
   tasks:
-    - name: Download kubernetes binaries locally
-      get_url:
-      args:
-        url: https://dl.k8s.io/{{kubernetes_install.version}}/kubernetes-server-linux-amd64.tar.gz
-        dest: /tmp/ansible/kubernetes-{{kubernetes_install.version}}.tar.gz
-        checksum: "{{kubernetes_install.sha256}}"
-      when: inventory_hostname == play_hosts[0]
-      delegate_to: localhost
-      become: False
-
-    - name: Extract binaries locally
-      command: /etc/ansible/books/extract-k8s.sh /tmp/ansible/kubernetes-{{kubernetes_install.version}}.tar.gz {{kubernetes_install.sha256[7:]}}
-      args:
-        chdir: /tmp/ansible
-      when: inventory_hostname == play_hosts[0]
-      delegate_to: localhost
-      become: False
-
     - name: Create kubernetes dirs
       file:
       args:
@@ -84,24 +66,14 @@
         - /etc/kubernetes/conf
         - /etc/kubernetes/manifests
         - /etc/kubernetes/ssl
-        - /opt/kubernetes/bin
+        - /opt/bin
 
-    - name: Upload kubernetes binaries
-      copy:
+    - name: Render kubectl wrapper
+      template:
       args:
-        src: /tmp/ansible/{{kubernetes_install.sha256[7:]}}/{{item}}
-        dest: /opt/kubernetes/bin
-        owner: root
+        src: /etc/ansible/k8s-config/kubectl.j2
+        dest: /opt/bin/kubectl
         mode: 0755
-      with_items:
-        - hyperkube
-        - kubectl
-      notify:
-        - restart-scheduler
-        - restart-proxy
-        - restart-kubelet
-        - restart-controller-manager
-        - restart-apiserver
 
     - name: Upload jsonl policy
       copy:
@@ -169,6 +141,7 @@
         - scheduler
         - controller-manager
         - kubelet
+        - apiserver2kubelet
 
     - name: Upload kube-proxy client certificates
       copy:
@@ -192,6 +165,16 @@
       notify:
         - restart-kubelet
 
+    - name: Upload apiserver client certificates
+      copy:
+      args:
+        src: /ansinetes/security/certs/{{item}}
+        dest: /etc/kubernetes/ssl/{{item}}
+      with_items:
+        - apiserver2kubelet.pem
+        - apiserver2kubelet-key.pem
+      notify:
+        - restart-apiserver
 
     - name: Upload scheduler client certificates
       copy:
@@ -448,23 +431,23 @@
       with_items: "{{addons}}"
 
     - name: Stop add-ons
-      command: "/opt/kubernetes/bin/kubectl {{kubectl_params}} delete -f /etc/kubernetes/addons/{{item.item}}"
+      command: "/opt/bin/kubectl {{kubectl_params}} delete -f /etc/kubernetes/addons/{{item.item}}"
       when: inventory_hostname == groups.apiservers[0] and item.changed
       ignore_errors: yes
       with_items: "{{addons_rendered.results}}"
 
     - name: Start add-ons
-      command: "/opt/kubernetes/bin/kubectl {{kubectl_params}} create -f /etc/kubernetes/addons/{{item.item}}"
+      command: "/opt/bin/kubectl {{kubectl_params}} create -f /etc/kubernetes/addons/{{item.item}}"
       when: inventory_hostname == groups.apiservers[0] and item.changed
       ignore_errors: yes
       with_items: "{{addons_rendered.results}}"
 
     - name: Start/Stop datadog
-      command: "/opt/kubernetes/bin/kubectl {{kubectl_params}} {%if datadog.enabled%}create{%else%}delete{%endif%} -f /etc/kubernetes/addons/datadog.yaml"
+      command: "/opt/bin/kubectl {{kubectl_params}} {%if datadog.enabled%}create{%else%}delete{%endif%} -f /etc/kubernetes/addons/datadog.yaml"
       when: inventory_hostname == groups.apiservers[0]
       ignore_errors: yes
 
     - name: Start/Stop sysdig
-      command: "/opt/kubernetes/bin/kubectl {{kubectl_params}} {%if sysdig.enabled%}create{%else%}delete{%endif%} -f /etc/kubernetes/addons/sysdig-daemonset.yaml"
+      command: "/opt/bin/kubectl {{kubectl_params}} {%if sysdig.enabled%}create{%else%}delete{%endif%} -f /etc/kubernetes/addons/sysdig-daemonset.yaml"
       when: inventory_hostname == groups.apiservers[0]
       ignore_errors: yes

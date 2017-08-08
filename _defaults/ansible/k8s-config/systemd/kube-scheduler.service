@@ -2,15 +2,20 @@
 Description=Kubernetes Scheduler Plugin
 Documentation=https://github.com/GoogleCloudPlatform/kubernetes
 
-[Service]
-EnvironmentFile=-/etc/kubernetes/conf/config.env
-EnvironmentFile=-/etc/kubernetes/conf/scheduler.env
 
-ExecStart=/opt/kubernetes/bin/hyperkube scheduler \
+
+[Service]
+EnvironmentFile=/etc/kubernetes/conf/config.env
+EnvironmentFile=-/etc/kubernetes/conf/scheduler.env
+Environment="RKT_RUN_ARGS=--net=host"
+Environment="KUBELET_IMAGE_ARGS=--exec=/scheduler"
+
+ExecStartPre=-/usr/bin/rkt rm --uuid-file=/var/run/%p-pod.uuid
+ExecStart=/usr/lib/coreos/kubelet-wrapper \
 	    $KUBE_LOGTOSTDERR \
 	    $KUBE_LOG_LEVEL \
-	    $KUBE_MASTER \
 	    $KUBE_SCHEDULER_ARGS
+ExecStop=-/usr/bin/rkt stop --uuid-file=/var/run/%p-pod.uuid
 
 Restart=on-failure
 RestartSec=10

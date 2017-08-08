@@ -75,6 +75,6 @@
       with_items: "{{addons}}"
 
     - name: Start add-ons
-      shell: "/opt/kubernetes/bin/kubectl {{kubectl_params}} create -f /etc/kubernetes/addons/{{item}} || echo Maybe already started"
+      shell: "/opt/bin/kubectl {{kubectl_params}} create -f /etc/kubernetes/addons/{{item}} || echo Maybe already started"
       when: inventory_hostname == groups.apiservers[0]
       with_items: "{{addons}}"

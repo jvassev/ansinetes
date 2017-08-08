@@ -1,8 +1,9 @@
 ---
-# Get versions from here https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG.md
+# kublet-wrapper is used
+# check https://quay.io/repository/coreos/hyperkube?tab=tags for valid tags
 kubernetes_install:
   version: v1.6.8
-  sha256: sha256:9bf31375917ffdf9a9437ed562e96a1e2b43e23dcb4a42204032bb289ff12b6d
+  tag: v1.6.8_coreos.0
 
 helm_install:
   version: v2.5.1

@@ -23,3 +23,7 @@
       shell: |
         etcdctl {{etcdctl_params}} rm -recursive {{kubernetes_etcd_prefix}} || echo Nothing to delete
       when: inventory_hostname == play_hosts[0]
+
+    - name: Delete rendered add-ons
+      shell: |
+        rm /etc/kubernetes/addons/*.yaml
