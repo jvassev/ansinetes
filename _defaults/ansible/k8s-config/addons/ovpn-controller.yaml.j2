@@ -45,6 +45,8 @@ spec:
               value: {{kubernetes_dns.ip}}
             - name: OVPN_K8S_DOMAIN
               value: {{kubernetes_dns.domain}}
+            - name: MORE_OPTS
+              value: duplicate-cn
           ports:
             - name: openvpn
               containerPort: 1194
