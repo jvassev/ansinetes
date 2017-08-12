@@ -224,6 +224,7 @@ for line in $(cat ${ANSINETES_PROJECT}/ansible/hosts | grep ansible_host | sed '
   IFS=' ' read -r -a array <<< $line
   cat <<EOF
 
+UserKnownHostsFile /dev/null
 Host ${array[0]}
   HostName ${array[1]}
   IdentityFile ${ANSINETES_PROJECT}/security/ansible-ssh-key

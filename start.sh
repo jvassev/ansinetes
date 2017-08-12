@@ -19,6 +19,7 @@ if [ "$USER" != "ansinetes" ]; then
     for line in $(cat /etc/ansible/hosts | grep ansible_host | sed 's/ansible_host=//'); do
       IFS=' ' read -r -a array <<< $line
       cat <<EOF
+UserKnownHostsFile /dev/null
 Host ${array[0]}
   HostName ${array[1]}
   IdentityFile /ansinetes/security/ansible-ssh-key
