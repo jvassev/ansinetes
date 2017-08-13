@@ -7,7 +7,7 @@ After=etcd2.service
 [Service]
 EnvironmentFile=/etc/kubernetes/conf/config.env
 EnvironmentFile=-/etc/kubernetes/conf/apiserver.env
-Environment="RKT_RUN_ARGS=--net=host --uuid-file-save=/var/run/%p-pod.uuid \
+Environment="RKT_RUN_ARGS=--uuid-file-save=/var/run/%p-pod.uuid \
 --volume etcd,kind=host,source=/etc/ssl/etcd,readOnly=true \
 --mount volume=etcd,target=/etc/ssl/etcd"
 

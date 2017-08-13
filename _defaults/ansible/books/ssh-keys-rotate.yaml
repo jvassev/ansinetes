@@ -31,7 +31,11 @@
         state: absent
 
     - name: Move new key into default location
-      shell: "mv {{ new_priv_key }} /ansinetes/security/ansible-ssh-key && mv {{ new_pub_key }} /ansinetes/security/ansible-ssh-key.pub"
+      shell: |
+        cp /ansinetes/security/ansible-ssh-key     /ansinetes/security/ansible-ssh-key.backup
+        cp /ansinetes/security/ansible-ssh-key.pub /ansinetes/security/ansible-ssh-key.pub.backup
+        mv {{ new_priv_key }} /ansinetes/security/ansible-ssh-key
+        mv {{ new_pub_key }} /ansinetes/security/ansible-ssh-key.pub
       when: inventory_hostname == play_hosts[0]
       delegate_to: localhost
       become: False

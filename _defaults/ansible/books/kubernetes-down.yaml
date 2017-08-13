@@ -18,3 +18,4 @@
         - kubelet.service
         - kube-proxy.service
         - kube-scheduler.service
+        - apiserver-lb.service

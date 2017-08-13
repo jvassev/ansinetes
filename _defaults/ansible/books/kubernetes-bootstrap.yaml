@@ -103,7 +103,7 @@
         - restart-apiserver
 
     - name: Create apiserver certificate
-      command: "kt-server-cert-create -h {{kubernetes_apiserver_ip}},localhost,127.0.0.1,{%for name in groups.apiservers%}{{hostvars[name][public_iface].ipv4.address}}{%if not loop.last%},{%endif%}{%endfor%} apiserver"
+      command: "kt-server-cert-create -h {{kubernetes_apiserver_ip}},localhost,172.16.28.1,127.0.0.1 apiserver"
       delegate_to: localhost
       when: inventory_hostname == play_hosts[0]
       args:
@@ -364,7 +364,6 @@
       notify:
         - restart-apiserver-lb
 
-
     - name: Systemd daemon reload
       command: systemctl daemon-reload
 
@@ -409,7 +408,11 @@
       register: proxy_needs_restart
 
     - name: Start apiserver-lb
-      service: name=apiserver-lb.service state=started enabled=yes
+      service:
+      args:
+        name: apiserver-lb.service
+        state: started
+        enabled: yes
       register: apiserver_lb_needs_restart
 
     - name: Render cluster add-ons on the nodes

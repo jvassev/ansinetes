@@ -7,7 +7,7 @@ Requires=docker.service
 [Service]
 EnvironmentFile=/etc/kubernetes/conf/config.env
 EnvironmentFile=-/etc/kubernetes/conf/kubelet.env
-Environment="RKT_RUN_ARGS=--net=host --uuid-file-save=/var/run/%p-pod.uuid \
+Environment="RKT_RUN_ARGS=--uuid-file-save=/var/run/%p-pod.uuid \
 --volume=resolv,kind=host,source=/etc/resolv.conf,readOnly=true \
 --mount volume=resolv,target=/etc/resolv.conf \
 --volume modprobe,kind=host,source=/usr/sbin/modprobe \
@@ -24,6 +24,7 @@ ExecStart=/usr/lib/coreos/kubelet-wrapper \
 	    $KUBELET_ARGS
 
 ExecStop=-/usr/bin/rkt stop --uuid-file=/var/run/%p-pod.uuid
+
 Restart=on-failure
 RestartSec=10
 KillMode=process

@@ -18,6 +18,7 @@
         - kubelet.service
         - kube-proxy.service
         - kube-scheduler.service
+        - apiserver-lb.service
 
     - name: Clear cluster state in etcd at key {{kubernetes_etcd_prefix}}
       shell: |

@@ -62,7 +62,11 @@
         enabled: "{%if inventory_hostname in groups['kubelets']%}yes{%else%}no{%endif%}"
 
     - name: Start apiserver-lb
-      service: name=apiserver-lb.service state=started enabled=yes
+      service:
+      args:
+        name: apiserver-lb.service
+        state: started
+        enabled: yes
 
     - name: Render cluster add-ons locally
       delegate_to: localhost

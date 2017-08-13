@@ -1,8 +1,10 @@
 global
 	log /dev/log local0 info
+{%set ipv4address = vars[public_iface].ipv4.address -%}
 
 frontend fe_api
-	bind *:6443
+	bind {{ipv4address}}:6443
+	bind 172.16.28.1:6443
 	mode tcp
 	timeout client 3600s
 	backlog 4096
@@ -15,8 +17,33 @@ backend be_api
 	option redispatch
 	balance roundrobin
 	{%for name in groups.apiservers -%}
+	{%if inventory_hostname == name -%}
+	server self 127.0.0.1:6443
+	{%else-%}
 	server {{name}} {{hostvars[name][public_iface].ipv4.address}}:6442
+	{%endif-%}
 	{%endfor-%}
 	timeout connect 10s
 	timeout queue 50s
 	timeout server 3600s
+
+{%if inventory_hostname in groups.apiservers -%}
+###### expose apiserver for other nodes' ha-proxies
+frontend fe_local
+	bind {{ipv4address}}:6442
+	mode tcp
+	timeout client 3600s
+	backlog 4096
+	maxconn 5000
+	default_backend be_local
+
+backend be_local
+	mode tcp
+	option log-health-checks
+	option redispatch
+	balance roundrobin
+	server self 127.0.0.1:6443
+	timeout connect 10s
+	timeout queue 50s
+	timeout server 3600s
+{%endif-%}
