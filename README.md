@@ -6,7 +6,7 @@ Ansinetes may not exhibit Ansible best practices but is a good starting point to
 
 It has already taken some decisions for you:
 * Uses CoreOS
-* Uses CoreOS version of Kubernetes in the form of [kubelet-wrapper](https://coreos.com/kubernetes/docs/latest/kubelet-wrapper.html)
+* Uses the CoreOS distribution of Kubernetes in the form of [kubelet-wrapper](https://coreos.com/kubernetes/docs/latest/kubelet-wrapper.html)
 * Uses flannel for the pod overlay network
 * Configures TLS everywhere possible
 * Prepares CoreOS to mount NFS shares
@@ -16,6 +16,7 @@ It has already taken some decisions for you:
 * Linux or Mac
 * Docker running locally (there will be volumes being host-mounted)
 * Vagrant (only if you're going to use it)
+* Some CoreOS'es idling around and you can ssh into them using a private key
 
 # Install
 ```bash
@@ -31,9 +32,13 @@ chmod +x ansinetes
 This script will pull an image from dockerhub with Ansible 2.x installed. On first run it will populate a local directory with playbooks and supporting resources.
 
 # Booting a sensible Kubernetes cluster
+A sensible cluster is defined by:
+* HA control plane
+* Secure component communication
+* Only basic add-ons installed
 
 ## Enter the interactive Ansible environment
-Pick a project name and start ansinetes. A directory named after the project will be created:
+Pick a project name and run ansinetes. A directory named after the project will be created:
 
 ```bash
 $ ./ansinetes -p demo
@@ -93,15 +98,6 @@ PLAY [Bootstrap etcd cluster] **************************************************
 ...
 ```
 
-## Configure Docker
-Docker needs to be configured too, for example setting insecure registries. The `docker-bootstrap.yaml` book insertes a systemd drop-in file. You can add additional configs by editing `docker-config/20-registry.conf.j2` file.
-
-```bash
-[ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/docker-bootstrap.yaml
-PLAY [Configure Docker] ********************************************************
-...
-```
-
 ## Configure flannel
 ```bash
 [ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/flannel-bootstrap.yaml
@@ -111,6 +107,15 @@ PLAY [Configure and start flannel] *********************************************
 The overlay network is 25.0.0.0/16 so it can easily be distinguished from other 10.*
 networks lying around. That's fine unless you are going to communicate with the [British Ministry
 of Defense](https://en.wikipedia.org/wiki/LogMeIn_Hamachi#Addressing). Flannel subnet can be configured.
+
+## Configure Docker
+Docker needs to be configured too, for example setting insecure registries. The `docker-bootstrap.yaml` book insertes a systemd drop-in file. You can add additional configs by editing `docker-config/20-registry.conf.j2` file.
+
+```bash
+[ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/docker-bootstrap.yaml
+PLAY [Configure Docker] ********************************************************
+...
+```
 
 ## Install Kubernetes
 This step will install systemd units for every Kubernetes service on the nodes.
@@ -163,7 +168,7 @@ kube-system   kube-dns-v19-r2o5g                      3/3       Running   0     
 kube-system   kubernetes-dashboard-2982215621-w1nu4   1/1       Running   0          1m
 ```
 
-You can pass `-n NAMESPACE` and you will be dropped in the selected Kubernetes namespace, which will also be visible in your prompt.
+You can pass `-n NAMESPACE` and you will be dropped in the selected Kubernetes namespace, which will also be mirrored in your prompt.
 
 Your old kubecfg will be left intact. In fact every time you enter a shell with `-s` the kubecfg will be enriched with configuration about the cluster and the full path to the project dir will be used as the context and cluster name.
 
@@ -173,28 +178,27 @@ $ KUBECONFIG=my-kubeconfig ansinetes -p demo -s < /dev/null
 ````
 The file `my-kubeconfig` now describes a connection to the `demo` cluster, is self-contained and can be distributed.
 
-While in a shell (`-s`) the `ssh` command is configured with a custom ssh_config file. This lets you ssh to your nodes using the ansible private key and also using the ansible_hostname of the machine (without dealing with IP's, keys and ssh options):
+While in a shell (`-s`) the `ssh` client is configured with a custom ssh_config file. This lets you ssh to your nodes referring to them by their ansible_hostname (without dealing with IP's, keys and ssh options):
 
 ```bash
 $ ./ansinetes -p demo -s -n web
 Welcome to ansinetes virtual environment "demo"
 $ [*demo:web*] ssh kbt-1
-Failed to add the host to the list of known hosts (/home/ansinetes/.ssh/known_hosts).
 Container Linux by CoreOS stable (1409.7.0)
+core@kbt-1 ~ $
 
 ```
 
-Finally, for every ansinetes project a separate bash history is maintained. This is a great timesaver when you are dealing with long and complex `kubectl` invocations. Also it may prevent accidents as the history would contain entries valid only in the current /project/namespace.
+Finally, for every ansinetes project a separate bash history is maintained. This is a great timesaver when you are dealing with long and complex `kubectl` invocations. Also it may prevent accidents as the history would contain entries valid only in the current project and/or namespace.
 
 # Deployment description
-When Vagrant is used there are 4 VMs being created. This can be changed by editing the vagrant/config.rb script. 3 nodes take part in the etcd quorum while the rest are proxies. There are two api-servers. Controller-manager and Scheduler run with `--leader-elect` option. Components that target the apiserver will talk to the first node from the 'apiservers' group (no HA here). The default `hosts` file describes the role mapping:
+There is no distinction between "master" nodes and kubelet nodes: you can assing nodes to any node and even can change your mind later. There can be multiple apiservers or schedulers, running on the same node or not. For example the default configuration for Vagrant is listed here:
 
 ```ini
-[coreos]
+[etcd-quorum-members]
 kbt-1
 kbt-2
 kbt-3
-kbt-4
 
 [apiservers]
 kbt-2
@@ -208,23 +212,25 @@ kbt-3
 kbt-4
 kbt-3
 
-[etcd-quorum-members]
+[kubelet]
 kbt-1
 kbt-2
 kbt-3
-
+kbt-4
 ```
+A kubelet/proxy runs everywhere while core services are carefully spread accross all 4 nodes. Schedulers and controllers run with `--leader-elect` option. The apiserver also runs in HA mode. On every node a ha-proxy is running that load balances between all the available apiservers. If an apiserver is down the health checks in the ha-proxy will detect it and will not forward requests to it. As a side effect, every node exposes the apiserver API on port 6443 and you can target an arbitrary node with `kubectl`.
 
-Systemd units are installed uniformly everywhere but are enabled and started only on the designated nodes. If you change the service to node mapping you need to run `kubernetes-up.yaml` and `kubernetes-down.yaml` again. Kubelet and Proxy run on every node.
+All communucations between componentes is secured. There is no plain http communication. The services trust the certificate authority created by the `kt-init-ca` command.
 
-Api-server is started with `--authorization-mode=ABAC`. Have a look at the jsonl policy file for details.
+Systemd units are installed uniformly everywhere but are enabled and started only on the designated nodes. If you change the service to node mapping you need to run `kubernetes-bootstrap.yaml` - this will only do the necessary changes and won't restart services needlessly.
+
+Api-server is started with `--authorization-mode=ABAC`. Have a look at the `k8s-config/policy.jsonl` file for details.
 
 Every component authenticates to the apiserver using a private key under a service account (mapping the CN to the username). The default service account for the kube-system namespace has all privileges.
-Additionally an `admin` user is created and is used by `kubectl`. There is also username/password authentication configured for the admin user with default password `pass123`. You can change it or add other users to the file `token.csv` before bootstrapping the cluster.
 
-There can be many api-servers running at the same time. They run by default on the secure port 6442. On every node a ha-proxy is run (on 6443) that load balances between the available api-server. As a result kubelets go to https://localhost:6443 to locate the apiserver and you can scale up/down the number of api-servers almost transparently.
+Additionally an `admin` user is created and is used by `kubectl`. There is also username/password authentication configured for the admin user (for easy Dashboard access) with default password `pass123`. You can change it or add other users to the file `token.csv` before bootstrapping the cluster.
 
-Only four add-ons are deployed: Dashboard, DNS, Heapster and Registry. The add-ons yamls may be touched a bit and made to work with ansible.
+Only four add-ons are deployed: Dashboard, DNS, Heapster and Registry. The add-ons yaml files may be touched a bit and made to work with ansible.
 
 While not technically an add-on an OpenVPN [service](https://github.com/jvassev/openvpn-k8s) is also deployed by default. During development it is sometimes very useful to make your workstation part of the Kubernetes service network. When you run the playbook `kubernetes-bootstrap.yaml` an openvpn client configuration is re-generated locally. You can then "join" the Kubernetes service and pod network using:
 ```bash
@@ -234,7 +240,8 @@ Sun Sep 18 22:40:05 2016 OpenVPN 2.3.7 x86_64-pc-linux-gnu [SSL (OpenSSL)] [LZO]
 Sun Sep 18 22:40:08 2016 /sbin/ip addr add dev tun0 local 10.241.0.6 peer 10.241.0.5
 Sun Sep 18 22:40:08 2016 Initialization Sequence Completed
 ```
-The file `ovpn-client.conf` is located in under tmp/ folder in the project. Then, assuming you are running with the default config, you should be able to resolve the kube api-server:
+
+The file `ovpn-client.conf` is located in under tmp/ folder in the project. Then, assuming you've established an OpenVPN connection successfully, you should be able to resolve the kube api-server:
 ```bash
 $ nslookup kubernetes.default 10.254.0.2
 Server:     10.254.0.2
@@ -244,7 +251,7 @@ Non-authoritative answer:
 Name:   kubernetes.default.svc.cluster.local
 Address: 10.254.0.1
 ```
-When the OpenVPN bridge is opened you can target the pod themselves. This is not something you would do in production but is worth having around when troubleshooting.
+While the OpenVPN bridge is opened you can target the pod themselves. This is not something you would do in production but is worth having around when troubleshooting.
 
 OpenVPN client will also use the KubeDNS as your workstation DNS. You will be able to target any service by IP, any pod by it IP and also all services by their DNS name.
 
@@ -255,8 +262,9 @@ A docker registry is run in insecure mode. It is accessible at `registry.kube-sy
 Ansinetes will also deploy DataDog and Sysdig daemonsets if enabled in the configuration. The yaml files are kept close the original versions, only the API key is set (and occasionally a bug fixed). If you wish to enable/disable these services run kubernetes-bootstrap.yaml again.
 
 # Customizing the deployment
-The easiest way to customize the deployment is to edit the `ansible/group_vars/all.yaml` file. You can control many options there. If you want to experiment with other Kubernetes config options you can edit the ansible/k8s-config/*.j2 templates. They are borrowed from the [init](https://github.com/Kubernetes/contrib/tree/master/init/systemd) contrib dir. If you find an option worthy of putting in a group var please contribute! The systemd unit files will hardly need to be touched though. The `hosts` can be changed to remap/resize pools allocated to different components.
-An example `all.yaml` file is given bellow to
+The easiest way to customize the deployment is to edit the `ansible/group_vars/all.yaml` file. You can control many options there. If you want to experiment with other Kubernetes config options you can edit the ansible/k8s-config/*.j2 templates. They are borrowed from the [init](https://github.com/Kubernetes/contrib/tree/master/init/systemd) contrib dir. If you find an option worthy of putting in a group var please contribute! The systemd unit files will hardly need to be touched though. The `hosts` can be changed to nodes.
+
+The default `all.yaml` file looks like this
 ```yaml
 flannel:
   network: "25.0.0.0/16"
@@ -293,10 +301,10 @@ public_iface: ansible_eth1
 ```
 
 # Starting over
-Run any of the *-bootstrap playbooks as often as you like. After boostraping you may need to run the *-up or *-down playbooks. Runbooks try to be idempotent and do as little work as possible.
+If you are using this project maybe you like to experiment and break things. Run any of the *-bootstrap playbooks as often as you like. After boostraping you may need to run the *-up or *-down playbooks. Runbooks try to be idempotent and do as little work as possible.
 
 ## Regenerating the CA
-Delete the security/ca.pem file, security/certs/* and run kt-ca-init again. The `etcd-bootstrap.yaml` and `Kubernetes-boostrap.yaml` need to be run again to distribute the new certificates and keys. By judiciously deleting *.pem file from the `cert` dir you can retrigger key re-generation and re-distribution.
+Delete the security/ca.pem file, security/certs/* and run `kt-ca-init` again. The `etcd-bootstrap.yaml` and `Kubernetes-boostrap.yaml` need to be run again to distribute the new certificates and keys. By judiciously deleting *.pem file from the `cert` dir you can retrigger key re-generation and re-distribution.
 
 ## Purging cluster state
 `etcd-purge.yaml` will purge etcd state. If you've messed up only Kubernetes, you can run only the `kubernetes-purge.yaml` playbook.
@@ -324,7 +332,7 @@ You would find ansinetes useful if you:
 * Is federated Kubernetes supported? Not yet.
 
 # Known issues
-Ansible hangs sometimes when uploading large files. You may need to Ctrl+C the run and re-run it.
+If you lose a node then `ansinetes -s` will produce an invalid config for you. That's because it chooses a random node as the server. Fix it by removing the node that's no longer there.
 
 # Resources
 * [Kubernetes from scratch](http://Kubernetes.io/v1.0/docs/getting-started-guides/scratch.html)

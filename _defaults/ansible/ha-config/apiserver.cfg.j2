@@ -14,13 +14,14 @@ frontend fe_api
 backend be_api
 	mode tcp
 	option log-health-checks
+	option ssl-hello-chk
 	option redispatch
 	balance roundrobin
 	{%for name in groups.apiservers -%}
 	{%if inventory_hostname == name -%}
-	server self 127.0.0.1:6443
+	server self 127.0.0.1:6443 check
 	{%else-%}
-	server {{name}} {{hostvars[name][public_iface].ipv4.address}}:6442
+	server {{name}} {{hostvars[name][public_iface].ipv4.address}}:6442 check
 	{%endif-%}
 	{%endfor-%}
 	timeout connect 10s
@@ -39,7 +40,6 @@ frontend fe_local
 
 backend be_local
 	mode tcp
-	option log-health-checks
 	option redispatch
 	balance roundrobin
 	server self 127.0.0.1:6443
