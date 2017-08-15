@@ -6,12 +6,34 @@
   roles:
     - vmware.coreos-bootstrap
 
+  handlers:
+    - name: daemon-reload
+      command: systemctl daemon-reload
+
+    - name: restart-locksmithd
+      service:
+        name: locksmithd.service
+        state: restarted
+        enabled: yes
+
+    - name: restart-update-engine
+      service:
+        name: update-engine.service
+        state: restarted
+        enabled: yes
+
   tasks:
     - name: Ensure custom facts directory exists
-      file: path=/etc/ansible/facts.d recurse=yes state=directory
+      file:
+        path: /etc/ansible/facts.d
+        recurse: yes
+        state: directory
 
     - name: Install vsphere vm-id collector fact
-      copy: src=/etc/ansible/facts.d/ dest=/etc/ansible/facts.d/ mode=0755
+      copy:
+        src: /etc/ansible/facts.d/
+        dest: /etc/ansible/facts.d/
+        mode: 0755
 
     - name: Collect facts
       setup:
@@ -25,6 +47,33 @@
     - name: Enable rpc-statd.service
       service:
         name: rpc-statd.service
+        state: started
+        enabled: yes
+
+    - name: Create drop-in dir
+      file: dest={{item}} state=directory
+      with_items:
+        - /etc/systemd/system/locksmithd.service.d
+
+    - name: Configure locksmithd
+      copy:
+        src: /etc/ansible/coreos-config/40-locksmithd-params.conf
+        dest: /etc/systemd/system/locksmithd.service.d/40-locksmithd-params.conf
+      notify:
+        - daemon-reload
+        - restart-locksmithd
+
+    - name: Configure update-engine
+      copy:
+        src: /etc/ansible/coreos-config/update.conf
+        dest: /etc/coreos/update.conf
+      notify:
+        - daemon-reload
+        - restart-update-engine
+
+    - name: Enable locksmithd.service
+      service:
+        name: locksmithd.service
         state: started
         enabled: yes
 

@@ -34,7 +34,9 @@
       become: False
 
     - name: Upload ssl certificates and keys
-      copy: src=/ansinetes/security/{{item.src}} dest=/etc/ssl/etcd/{{item.dest}}
+      copy:
+        src: /ansinetes/security/{{item.src}}
+        dest: /etc/ssl/etcd/{{item.dest}}
       with_items:
         - src: ca.pem
           dest: ca.pem
@@ -61,7 +63,9 @@
         - /etc/systemd/system/locksmithd.service.d
 
     - name: Upload config file for etcd2
-      copy: src=/etc/ansible/etcd-config/etcd2.conf dest=/etc/systemd/system/etcd2.service.d/30-ansible.conf
+      copy:
+        src: /etc/ansible/etcd-config/etcd2.conf
+        dest: /etc/systemd/system/etcd2.service.d/30-ansible.conf
       notify:
         - restart-etcd2
 
@@ -71,7 +75,9 @@
         - restart-etcd2
 
     - name: Upload config file for locksmithd
-      copy: src=/etc/ansible/etcd-config/locksmithd.conf dest=/etc/systemd/system/locksmithd.service.d/30-ansible.conf
+      copy:
+        src: /etc/ansible/etcd-config/locksmithd.conf
+        dest: /etc/systemd/system/locksmithd.service.d/30-ansible.conf
 
     - name: daemon-reload
       command: systemctl daemon-reload
