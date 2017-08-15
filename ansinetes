@@ -187,11 +187,6 @@ fi
 PATH=${ANSINETES_PROJECT}/tmp/local-bin:$PATH
 kubectl config set-cluster ${ANSINETES_PROJECT} \
   --server=https://${RANDOM_MASTER_IP}:6443 \
-  --embed-certs=true \
-  --certificate-authority=${ANSINETES_PROJECT}/security/ca.pem \
-  > /dev/null
-
-kubectl config set-cluster ${ANSINETES_PROJECT} \
   --insecure-skip-tls-verify=true \
   > /dev/null
 
