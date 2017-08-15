@@ -220,11 +220,9 @@ cp ~/.ssh/config $ssh_cfg || true
 echo "# ansinetes customizations" >> $ssh_cfg
 IFS='
 '
-for line in $(cat ${ANSINETES_PROJECT}/ansible/hosts | grep ansible_host | sed 's/ansible_host=//'); do
+for line in $(cat ${ANSINETES_PROJECT}/ansible/hosts | grep -v '^#' | grep ansible_host | sed 's/ansible_host=//'); do
   IFS=' ' read -r -a array <<< $line
   cat <<EOF
-
-UserKnownHostsFile /dev/null
 Host ${array[0]}
   HostName ${array[1]}
   IdentityFile ${ANSINETES_PROJECT}/security/ansible-ssh-key
@@ -232,8 +230,11 @@ Host ${array[0]}
   ForwardAgent yes
   IdentitiesOnly yes
   StrictHostKeyChecking no
+
 EOF
 done >> $ssh_cfg
+
+echo "UserKnownHostsFile /dev/null" >> $ssh_cfg
 
 cp ~/.bashrc ${bash_cfg} &> /dev/null || echo No .bashrc file found
 
