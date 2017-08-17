@@ -364,6 +364,12 @@
       notify:
         - restart-apiserver-lb
 
+    - name: Upload keep-alive systemd unit
+      copy:
+      args:
+        src: /etc/ansible/ha-config/default-network-keepalive.service
+        dest: /etc/systemd/system/default-network-keepalive.service
+
     - name: Systemd daemon reload
       command: systemctl daemon-reload
 
@@ -406,6 +412,13 @@
         state: "{%if inventory_hostname in groups['kubelets']%}started{%else%}stopped{%endif%}"
         enabled: "{%if inventory_hostname in groups['kubelets']%}yes{%else%}no{%endif%}"
       register: proxy_needs_restart
+
+    - name: Start keep-alive
+      service:
+      args:
+        name: default-network-keepalive.service
+        state: started
+        enabled: yes
 
     - name: Start apiserver-lb
       service:

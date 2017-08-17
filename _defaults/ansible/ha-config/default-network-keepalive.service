@@ -1,0 +1,21 @@
+[Unit]
+Description=Keep the default rkt network alive
+After=docker.service
+
+[Service]
+ExecStartPre=-/usr/bin/rkt rm --uuid-file=/var/run/%p-pod.uuid
+ExecStart=/usr/bin/rkt \
+	--insecure-options=image \
+	--net=default \
+	--uuid-file-save=/var/run/%p-pod.uuid \
+	run \
+	docker://gcr.io/google_containers/pause
+
+ExecStop=-/usr/bin/rkt stop --uuid-file=/var/run/%p-pod.uuid
+
+Restart=on-failure
+RestartSec=10
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

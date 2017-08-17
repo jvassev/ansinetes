@@ -35,6 +35,7 @@ EOF
   fi
 fi
 
+chmod go-rwx /ansinetes/security/ansible-ssh-key || true > /dev/null
 export PATH=$PATH:/ansinetes/bin
 
 if [ "$DEVMODE" == "" ]; then

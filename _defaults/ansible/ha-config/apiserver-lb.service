@@ -5,7 +5,6 @@ After=docker.service
 
 [Service]
 ExecStartPre=-/usr/bin/rkt rm --uuid-file=/var/run/%p-pod.uuid
-ExecStartPre=-/usr/bin/rkt run --insecure-options=image --net=default docker://busybox
 ExecStart=/usr/bin/rkt \
 	--insecure-options=image \
 	--volume config,kind=host,source=/etc/haproxy/apiserver.cfg,readOnly=true \

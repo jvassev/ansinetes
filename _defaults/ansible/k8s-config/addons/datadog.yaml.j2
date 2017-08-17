@@ -24,6 +24,8 @@ spec:
             value: "yes"
           - name: TAGS
             value: "{{datadog.tags}}"
+          - name: SD_BACKEND
+            value: docker
         volumeMounts:
           - name: dockersocket
             mountPath: /var/run/docker.sock

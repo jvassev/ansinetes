@@ -254,4 +254,6 @@ export HISTFILE=${ANSINETES_PROJECT}/tmp/${DEFAULT_NS}-hist
 echo Welcome to ansinetes virtual environment \"${ANSINETES_PROJECT}\"
 EOF
 
+chmod go-rwx ${ANSINETES_PROJECT}/security/ansible-ssh-key || true > /dev/null
+
 bash --rcfile ${bash_cfg} $RUN_FILE
