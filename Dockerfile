@@ -17,7 +17,7 @@ RUN yum -y install python-setuptools openssh && \
 	pip install setuptools -U
 
 RUN yum -y install gcc openssh-clients openssl openssl-devel python-devel libffi-devel && \
-    pip install ansible==2.2.0.0 netaddr && \
+    pip install ansible==2.2.0.0 netaddr requests && \
     yum -y remove gcc openssl-devel python-devel && \
     yum clean all
 

@@ -9,6 +9,7 @@ if [ "$USER" != "ansinetes" ]; then
   adduser --uid $OUTER_USER ansinetes
   echo >> ~ansinetes/.bashrc
   echo  source "$(readlink -f $BASH_SOURCE)" >> ~ansinetes/.bashrc
+  echo "[ -e /etc/ansible/shell.inc ] && source /etc/ansible/shell.inc" >> ~ansinetes/.bashrc
   mkdir /ansinetes &> /dev/null
   chown ansinetes. /ansinetes
   chown ansinetes. /tmp/ansible
