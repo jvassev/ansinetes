@@ -1,0 +1,6 @@
+---
+- include: coreos-bootstrap.yaml
+- include: etcd-bootstrap.yaml
+- include: flannel-bootstrap.yaml
+- include: docker-bootstrap.yaml
+- include: kubernetes-bootstrap.yaml
