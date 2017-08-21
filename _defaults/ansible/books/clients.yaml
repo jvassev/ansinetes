@@ -1,11 +1,9 @@
 ---
 - hosts: localhost
 
-  gather_facts: False
-
   tasks:
     - name: Generate kubectl file
-      become: False
+      become_user: ansinetes
       environment:
         KUBECONFIG: /ansinetes/kubeconfig.yaml
       shell: |
@@ -22,7 +20,7 @@
         kubectl config use-context ansinetes
 
     - name : Generate ssh_config
-      become: False
+      become_user: ansinetes
       template:
         mode: go-rwx
         dest: /ansinetes/ssh_config
