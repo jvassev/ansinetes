@@ -6,7 +6,7 @@ build:
 	docker build -t $(IMAGE):$(TAG) .
 
 shell:
-	@docker run --rm -ti $(IMAGE)
+	@docker run --rm --entrypoint=/bin/bash -ti $(IMAGE)
 
 push:
 	docker push $(IMAGE):$(TAG)
