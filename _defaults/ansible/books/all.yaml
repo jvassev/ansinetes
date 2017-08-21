@@ -4,3 +4,4 @@
 - include: flannel-bootstrap.yaml
 - include: docker-bootstrap.yaml
 - include: kubernetes-bootstrap.yaml
+- include: clients.yaml

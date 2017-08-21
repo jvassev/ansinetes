@@ -107,6 +107,7 @@ if [[ $START_SHELL == 0 ]]; then
     -h $(basename ${ANSINETES_PROJECT}) \
     -e OUTER_USER=$(id -u) \
     -e RUN_FILE="$RUN_FILE" \
+    -e ANSINETES_PROJECT="${ANSINETES_PROJECT}" \
     -v ${ANSINETES_PROJECT}/tmp:/tmp/ansible \
     -v ${ANSINETES_PROJECT}:/ansinetes \
     ${ANSINETES_IMAGE}
@@ -212,24 +213,7 @@ readonly cyan="\[\033[0;36m\]"
 readonly no_color="\[\033[0m\]"
 
 cp ~/.ssh/config $ssh_cfg || true
-echo "# ansinetes customizations" >> $ssh_cfg
-IFS='
-'
-for line in $(cat ${ANSINETES_PROJECT}/ansible/hosts | grep -v '^#' | grep ansible_host | sed 's/ansible_host=//'); do
-  IFS=' ' read -r -a array <<< $line
-  cat <<EOF
-Host ${array[0]}
-  HostName ${array[1]}
-  IdentityFile ${ANSINETES_PROJECT}/security/ansible-ssh-key
-  User core
-  ForwardAgent yes
-  IdentitiesOnly yes
-  StrictHostKeyChecking no
-
-EOF
-done >> $ssh_cfg
-
-echo "UserKnownHostsFile /dev/null" >> $ssh_cfg
+cat ${ANSINETES_PROJECT}/ssh_config >> $ssh_cfg || true
 
 cp ~/.bashrc ${bash_cfg} &> /dev/null || echo No .bashrc file found
 

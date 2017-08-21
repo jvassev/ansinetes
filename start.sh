@@ -9,27 +9,14 @@ if [ "$USER" != "ansinetes" ]; then
   adduser --uid $OUTER_USER ansinetes
   echo >> ~ansinetes/.bashrc
   echo  source "$(readlink -f $BASH_SOURCE)" >> ~ansinetes/.bashrc
+  echo "export ANSINETES_PROJECT=${ANSINETES_PROJECT}" >> ~ansinetes/.bashrc
   echo "[ -e /etc/ansible/shell.inc ] && source /etc/ansible/shell.inc" >> ~ansinetes/.bashrc
   mkdir /ansinetes &> /dev/null
   chown ansinetes. /ansinetes
   chown ansinetes. /tmp/ansible
   if [ "$RUN_FILE" == "" ]; then
-    mkdir ~ansinetes/.ssh -p &> /dev/null
-    IFS='
-'
-    for line in $(cat /etc/ansible/hosts | grep -v '^#' | grep ansible_host | sed 's/ansible_host=//'); do
-      IFS=' ' read -r -a array <<< $line
-      cat <<EOF
-Host ${array[0]}
-  HostName ${array[1]}
-  IdentityFile /ansinetes/security/ansible-ssh-key
-  User core
-  IdentitiesOnly yes
-  StrictHostKeyChecking no
-
-EOF
-    done >  ~ansinetes/.ssh/config
-    echo "UserKnownHostsFile /dev/null" >> ~ansinetes/.ssh/config
+    mkdir -p ~ansinetes/.ssh
+    ln -s /ansinetes/ssh_config ~ansinetes/.ssh/config
     exec su ansinetes -l
   else
     exec su ansinetes $RUN_FILE
