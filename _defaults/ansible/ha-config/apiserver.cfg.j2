@@ -21,7 +21,7 @@ backend be_api
 	{%if inventory_hostname == name -%}
 	server self 127.0.0.1:6443 check
 	{%else-%}
-	server {{name}} {{hostvars[name][public_iface].ipv4.address}}:6442 check
+	server {{name}} {{hostvars[name][hostvars[name]['public_iface']].ipv4.address}}:6442 check
 	{%endif-%}
 	{%endfor-%}
 	timeout connect 10s

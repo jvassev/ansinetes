@@ -70,7 +70,9 @@
         - restart-etcd2
 
     - name: Upload config file to /etc/etcd2/env
-      template: src=/etc/ansible/etcd-config/config-bootstrap.j2 dest=/etc/etcd2/env
+      template:
+        src: /etc/ansible/etcd-config/config-bootstrap.j2
+        dest: /etc/etcd2/env
       notify:
         - restart-etcd2
 

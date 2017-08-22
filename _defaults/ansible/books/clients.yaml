@@ -29,3 +29,10 @@
       args:
         src: /etc/ansible/k8s-config/addons/ovpn-client.conf.j2
         dest: /ansinetes/ovpn-client.conf
+
+    - name: Create etcdctl local config
+      template:
+      args:
+        src: /etc/ansible/etcd-config/etcd_config.j2
+        dest: /ansinetes/tmp/etcd_config
+

@@ -177,33 +177,8 @@ if [ ! -f ${ANSINETES_PROJECT}/tmp/local-bin/kubectl ]; then
 fi
 
 ######## configure kubectl
-# get a random node from cluster: every node runs haproxy that routes to an apiserver
-RANDOM_MASTER_IP=$(cat ${ANSINETES_PROJECT}/ansible/hosts | sed -n 's/.*ansible_host=\(.*\)/\1/p' | shuf | head -n 1)
-
-if [ "${KUBECONFIG:-}" == "" ]; then
-  # don't touch user's config unless told so
-  export KUBECONFIG=$(mktemp)
-fi
-
+export KUBECONFIG=${ANSINETES_PROJECT}/kubeconfig.yaml
 PATH=${ANSINETES_PROJECT}/tmp/local-bin:$PATH
-kubectl config set-cluster ${ANSINETES_PROJECT} \
-  --server=https://${RANDOM_MASTER_IP}:6443 \
-  --insecure-skip-tls-verify=true \
-  > /dev/null
-
-kubectl config set-credentials admin@${ANSINETES_PROJECT} \
-  --client-key=${ANSINETES_PROJECT}/security/certs/admin-key.pem \
-  --client-certificate=${ANSINETES_PROJECT}/security/certs/admin.pem \
-  --embed-certs=true \
-  > /dev/null
-
-kubectl config set-context ${ANSINETES_PROJECT} \
-  --cluster=${ANSINETES_PROJECT} \
-  --namespace=$DEFAULT_NS \
-  --user=admin@${ANSINETES_PROJECT} > /dev/null
-
-kubectl config use-context ${ANSINETES_PROJECT} > /dev/null
-
 
 ######## prepare bash env
 mkdir ${ANSINETES_PROJECT}/tmp -p &> /dev/null || true
@@ -220,11 +195,7 @@ cp ~/.bashrc ${bash_cfg} &> /dev/null || echo No .bashrc file found
 cat << EOF >> ${bash_cfg}
 
 ######### ansinetes customizations
-export ETCDCTL_ENDPOINTS=https://${RANDOM_MASTER_IP}:2379
-export ETCDCTL_CA_FILE=${ANSINETES_PROJECT}/security/ca.pem
-export ETCDCTL_CERT_FILE=${ANSINETES_PROJECT}/security/certs/etcd-client.pem
-export ETCDCTL_KEY_FILE=${ANSINETES_PROJECT}/security/certs/etcd-client-key.pem
-
+. ${ANSINETES_PROJECT}/tmp/etcd_config || true
 export PATH=${ANSINETES_PROJECT}/tmp/local-bin:\$PATH
 export PS1="\${PS1}[${cyan}*${SHORT_NAME}:${DEFAULT_NS}*${no_color}] "
 
