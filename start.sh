@@ -16,7 +16,7 @@ if [ "$USER" != "ansinetes" ]; then
   chown ansinetes. /tmp/ansible
   if [ "$RUN_FILE" == "" ]; then
     mkdir -p ~ansinetes/.ssh
-    ln -s /ansinetes/ssh_config ~ansinetes/.ssh/config
+    ln -s /ansinetes/tmp/ssh_config ~ansinetes/.ssh/config
     exec su ansinetes -l
   else
     exec su ansinetes $RUN_FILE

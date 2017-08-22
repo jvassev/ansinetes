@@ -213,7 +213,7 @@ readonly cyan="\[\033[0;36m\]"
 readonly no_color="\[\033[0m\]"
 
 cp ~/.ssh/config $ssh_cfg || true
-cat ${ANSINETES_PROJECT}/ssh_config >> $ssh_cfg || true
+cat ${ANSINETES_PROJECT}/tmp/ssh_config >> $ssh_cfg || true
 
 cp ~/.bashrc ${bash_cfg} &> /dev/null || echo No .bashrc file found
 
