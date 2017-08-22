@@ -1,9 +1,8 @@
 ---
 - hosts: localhost
-
+  become: false
   tasks:
     - name: Generate kubectl file
-      become_user: ansinetes
       environment:
         KUBECONFIG: /ansinetes/kubeconfig.yaml
       shell: |
@@ -20,8 +19,13 @@
         kubectl config use-context ansinetes
 
     - name : Generate ssh_config
-      become_user: ansinetes
       template:
         mode: go-rwx
         dest: /ansinetes/ssh_config
         src: /etc/ansible/coreos-config/ssh_config.j2
+
+    - name: Create ovpn client profile
+      template:
+      args:
+        src: /etc/ansible/k8s-config/addons/ovpn-client.conf.j2
+        dest: /ansinetes/ovpn-client.conf

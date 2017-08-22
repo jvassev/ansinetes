@@ -339,15 +339,6 @@
         chdir: /ansinetes/security/certs
         creates: /ansinetes/security/certs/ovpn.p12
 
-    - name: Create ovpn client profile
-      delegate_to: localhost
-      become: False
-      when: inventory_hostname == play_hosts[0]
-      template:
-      args:
-        src: /etc/ansible/k8s-config/addons/ovpn-client.conf.j2
-        dest: /ansinetes/ovpn-client.conf
-
     - name: Configure ha-proxy
       template:
       args:
