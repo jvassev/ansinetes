@@ -38,3 +38,9 @@ kubernetes_etcd_prefix: /registry
 
 # this value valid for Vagrant
 public_iface: ansible_eth1
+
+
+ansible_ssh_private_key_file: /ansinetes/security/ansible-ssh-key
+ansible_python_interpreter: /home/core/bin/python
+ansible_user: core
+ansible_sudo: yes

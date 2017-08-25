@@ -28,10 +28,3 @@ kbt-3
 [ingress-edges]
 kbt-1
 kbt-4
-
-
-[all:vars]
-ansible_ssh_private_key_file = /ansinetes/security/ansible-ssh-key
-ansible_python_interpreter="/home/core/bin/python"
-ansible_user=core
-ansible_sudo=true
