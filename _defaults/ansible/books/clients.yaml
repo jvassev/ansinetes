@@ -7,7 +7,7 @@
         KUBECONFIG: /ansinetes/kubeconfig.yaml
       shell: |
         kubectl config set-cluster ansinetes \
-          --server=https://{{hostvars[groups['apiservers'][0]].ansible_host}}:6443 \
+          --server=https://{{hostvars[groups['masters'][0]].ansible_host}}:6443 \
           --insecure-skip-tls-verify=true && \
         kubectl config set-credentials admin \
           --client-key=/ansinetes/security/certs/admin-key.pem \

@@ -1,4 +1,4 @@
-export ETCDCTL_ENDPOINTS=https://{{hostvars[groups['apiservers'][0]].ansible_host}}:2379
+export ETCDCTL_ENDPOINTS=https://{{hostvars[groups['masters'][0]].ansible_host}}:2379
 export ETCDCTL_CA_FILE="{{ansible_env['ANSINETES_PROJECT']}}/security/ca.pem"
 export ETCDCTL_CERT_FILE="{{ansible_env['ANSINETES_PROJECT']}}/security/certs/etcd-client.pem"
 export ETCDCTL_KEY_FILE="{{ansible_env['ANSINETES_PROJECT']}}/security/certs/etcd-client-key.pem"

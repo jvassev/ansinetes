@@ -28,3 +28,8 @@ kbt-3
 [ingress-edges]
 kbt-1
 kbt-4
+
+[masters]
+kbt-1
+kbt-4
+kbt-2
