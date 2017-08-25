@@ -192,6 +192,7 @@ fi
 mkdir ${ANSINETES_PROJECT}/tmp -p &> /dev/null || true
 readonly bash_cfg=$(mktemp)
 readonly ssh_cfg=$(mktemp)
+readonly yellow="\[\033[0;33m\]"
 readonly cyan="\[\033[0;36m\]"
 readonly no_color="\[\033[0m\]"
 
@@ -205,7 +206,7 @@ cat << EOF >> ${bash_cfg}
 ######### ansinetes customizations
 . ${ANSINETES_PROJECT}/tmp/etcd_config || true
 export PATH=${ANSINETES_PROJECT}/tmp/local-bin:\$PATH
-export PS1="\${PS1}[${cyan}*${SHORT_NAME}:${DEFAULT_NS}*${no_color}] "
+export PS1="\${PS1}[${yellow}${SHORT_NAME}${no_color}:${cyan}${DEFAULT_NS}${no_color}] "
 
 kubectl config use-context ${ANSINETES_PROJECT} &> /dev/null
 source <(kubectl completion bash)
