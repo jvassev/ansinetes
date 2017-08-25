@@ -27,4 +27,4 @@
 
     - name: Delete rendered add-ons
       shell: |
-        rm /etc/kubernetes/addons/*.yaml
+        rm /etc/kubernetes/addons/*.yaml -rf

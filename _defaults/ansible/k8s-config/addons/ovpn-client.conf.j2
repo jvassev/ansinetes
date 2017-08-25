@@ -7,7 +7,7 @@ up /etc/openvpn/update-resolv-conf
 down /etc/openvpn/update-resolv-conf
 
 remote-random
-{%for node in groups.all -%}
+{%for node in groups['apiservers'] -%}
 remote {{hostvars[node][hostvars[node]['public_iface']].ipv4.address}} {{ovpn.node_port}} tcp
 {%endfor -%}
 

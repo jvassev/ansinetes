@@ -16,7 +16,8 @@ backend be_api
 	option log-health-checks
 	option ssl-hello-chk
 	option redispatch
-	balance roundrobin
+	balance source
+	hash-type consistent
 	{%for name in groups.apiservers -%}
 	{%if inventory_hostname == name -%}
 	server self 127.0.0.1:6443 check
