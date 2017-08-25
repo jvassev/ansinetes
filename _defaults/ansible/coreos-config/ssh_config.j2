@@ -9,4 +9,12 @@ Host {{node}}
   IdentitiesOnly yes
   StrictHostKeyChecking no
 
+Host {{hostvars[node].ansible_host}}
+  HostName {{hostvars[node].ansible_host}}
+  IdentityFile /ansinetes/security/ansible-ssh-key
+  IdentityFile {{ansible_env['ANSINETES_PROJECT']}}/security/ansible-ssh-key
+  User core
+  IdentitiesOnly yes
+  StrictHostKeyChecking no
+
 {%endfor -%}

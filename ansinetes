@@ -177,8 +177,16 @@ if [ ! -f ${ANSINETES_PROJECT}/tmp/local-bin/kubectl ]; then
 fi
 
 ######## configure kubectl
-export KUBECONFIG=${ANSINETES_PROJECT}/kubeconfig.yaml
 PATH=${ANSINETES_PROJECT}/tmp/local-bin:$PATH
+
+if [[ "default" != "$DEFAULT_NS" ]]; then
+  readonly kube_cfg=$(mktemp)
+  cp ${ANSINETES_PROJECT}/kubeconfig.yaml ${kube_cfg}
+  export KUBECONFIG=${kube_cfg}
+  kubectl config set-context ansinetes --namespace=foo > /dev/null
+else
+  export KUBECONFIG=${ANSINETES_PROJECT}/kubeconfig.yaml
+fi
 
 ######## prepare bash env
 mkdir ${ANSINETES_PROJECT}/tmp -p &> /dev/null || true
