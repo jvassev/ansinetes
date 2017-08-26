@@ -17,6 +17,7 @@
       args:
         creates: /ansinetes/security/certs/{{inventory_hostname}}-etcd-server.pem
       become: False
+      when: inventory_hostname in groups['etcd-quorum-members']
 
     - name: Create server certificate for peer endpoint
       command: "kt-server-cert-create -h localhost,127.0.0.1,{%for a in ansible_all_ipv4_addresses%}{{a}}{%if not loop.last%},{%endif%}{%endfor%} {{inventory_hostname}}-etcd-peer"
@@ -24,6 +25,15 @@
       args:
         creates: /ansinetes/security/certs/{{inventory_hostname}}-etcd-peer.pem
       become: False
+      when: inventory_hostname in groups['etcd-quorum-members']
+
+    - name: Create server certificate for proxy endpoint
+      command: "kt-server-cert-create -h localhost,127.0.0.1 proxy-etcd-server"
+      delegate_to: localhost
+      args:
+        creates: /ansinetes/security/certs/proxy-etcd-server.pem
+      become: False
+      when: inventory_hostname == groups.apiservers[0]
 
     - name: Create client certificate
       command: "kt-client-cert-create etcd-client"
@@ -33,13 +43,25 @@
         creates: /ansinetes/security/certs/etcd-client.pem
       become: False
 
-    - name: Upload ssl certificates and keys
+    - name: Upload ca and client keys
       copy:
         src: /ansinetes/security/{{item.src}}
         dest: /etc/ssl/etcd/{{item.dest}}
       with_items:
         - src: ca.pem
           dest: ca.pem
+        - src: "certs/etcd-client-key.pem"
+          dest: "client-key.pem"
+        - src: "certs/etcd-client.pem"
+          dest: "client.pem"
+      notify:
+        - restart-etcd2
+
+    - name: Upload server keys
+      copy:
+        src: /ansinetes/security/{{item.src}}
+        dest: /etc/ssl/etcd/{{item.dest}}
+      with_items:
         - src: "certs/{{inventory_hostname}}-etcd-server-key.pem"
           dest: "server-key.pem"
         - src: "certs/{{inventory_hostname}}-etcd-server.pem"
@@ -48,12 +70,26 @@
           dest: "peer-key.pem"
         - src: "certs/{{inventory_hostname}}-etcd-peer.pem"
           dest: "peer.pem"
-        - src: "certs/etcd-client-key.pem"
-          dest: "client-key.pem"
-        - src: "certs/etcd-client.pem"
-          dest: "client.pem"
       notify:
         - restart-etcd2
+      when: inventory_hostname in groups['etcd-quorum-members']
+
+    - name: Upload proxy keys
+      copy:
+        src: /ansinetes/security/{{item.src}}
+        dest: /etc/ssl/etcd/{{item.dest}}
+      with_items:
+        - src: "certs/proxy-etcd-server-key.pem"
+          dest: "server-key.pem"
+        - src: "certs/proxy-etcd-server.pem"
+          dest: "server.pem"
+        - src: "certs/proxy-etcd-server-key.pem"
+          dest: "peer-key.pem"
+        - src: "certs/proxy-etcd-server.pem"
+          dest: "peer.pem"
+      notify:
+        - restart-etcd2
+      when: inventory_hostname not in groups['etcd-quorum-members']
 
     - name: Create drop-in dir
       file: dest={{item}} state=directory
