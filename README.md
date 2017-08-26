@@ -2,14 +2,14 @@
 Why is that every "Kubernetes getting started" guide takes tens of manuals steps? There has to be a simpler way.
 
 Ansinetes (Ansible + Kubernetes) is a single command that lets you build multi-node high-availability clusters on CoreOS (on Vagrant or in your datacenter).
-Ansinetes may not exhibit Ansible best practices but is a good starting point to (re)create non-trivial clusters with complex configuration easily. Also it maps every step to an easily hackable playbook for you to customize
+Ansinetes may not exhibit Ansible best practices but is a good starting point to (re)create non-trivial clusters with complex configuration easily. Also it maps every step to an easily hackable playbook for you to customize.
 
 It has already taken some decisions for you:
 * Uses CoreOS
 * Uses the CoreOS distribution of Kubernetes in the form of [kubelet-wrapper](https://coreos.com/kubernetes/docs/latest/kubelet-wrapper.html)
 * Uses flannel for the pod overlay network
 * Configures TLS everywhere possible
-* Prepares CoreOS to mount NFS shares
+* Ready to mount NFS and RBD volumes
 * Runs the control plane in HA mode
 
 # Prerequisites
@@ -23,6 +23,8 @@ It has already taken some decisions for you:
 curl -Ls -O https://raw.githubusercontent.com/jvassev/ansinetes/master/ansinetes
 chmod +x ansinetes
 ```
+You would probably put the script in ~/bin. Updating is just as easy `ansinetes -u`.
+
 # Supported versions
 * Kubernetes: 1.4.0 - 1.6.8 (you can control the k8s version deployed by editing the `k8s-config/vars.yaml` file)
 * CoreOS: this depends on the kubernetes version (which determines the earliest Docker it supports)
@@ -41,7 +43,6 @@ A sensible cluster is defined by:
 Pick a project name and run ansinetes. A directory named after the project will be created:
 
 ```bash
-$ ./ansinetes -p demo
 ./ansinetes -p demo
  *** First run, copying default configuration
  *** Generating ssh key...
@@ -51,7 +52,8 @@ ssh-rsa ... ansible-generated/initial
 
 [ansinetes@demo ~]$
 ```
-You are dropped into a bash session (in a container) with ansible already installed and preconfigured - no need to install anything. The project directory already contains some default configuration as well as the Ansible playbooks. The `-p` parameter expects a path to a folder and will create one if it doesn't exist.
+
+You are dropped into a bash session (in a container) with ansible already installed and preconfigured. The project directory already contains some default configuration as well as the Ansible playbooks. The `-p` parameter expects a path to a folder and will create one if it doesn't exist.
 
 ## Start the Vagrant environment
 In another shell navigate to demo/vagrant and start the VMs. Four VMs with 1GB of memory are started:
@@ -126,17 +128,23 @@ PLAY [Install kubernetes on all nodes] *****************************************
 ...
 ```
 
-Then you need to start the services:
+## Create client configuration
+To generate kubeconfigs and other client-side artifacts run clients.yaml:
 ```bash
-[ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/kubernetes-up.yaml
-PLAY [Start kubernetes] ********************************************************
+[ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/clients.yaml
+...
+```
+
+To save some keystrokes you can accomplish all of the above steps using the `all.yaml` playbook:
+```bash
+[ansinetes@demo ~]$ ansible-playbook /etc/ansible/books/all.yaml
 ...
 ```
 
 ## Access your environment
-Now that your cluser is running in Vagrant it's time to access it. In another shell
+Now that your cluser is running it's time to access it. In another shell
 run `ansinetes -p demo -s` (-s for shell). It will start your $SHELL with a modified
-environment, changed $PATH, changed $PS1 and `helm `, `kubectl` and `etcdctl` preconfigured. The changed prompt contains the project name and the current namespace enclosed in **
+environment, changed $PATH, changed $PS1 and `helm `, `kubectl` and `etcdctl` preconfigured. The changed prompt contains the project name and the current namespace:
 
 ```bash
 $ ./ansinetes -p demo -s
@@ -149,20 +157,20 @@ Installing kubectl locally...
 Welcome to ansinetes virtual environment "demo"
 
 # etctl is configured!
-$ [*demo:default*] etcdctl member list
+$ [demo:default] etcdctl member list
 546c6cb8c021e3: name=a42bababcba440978f62d41d8b7e26b6 peerURLs=https://172.33.8.101:2380 clientURLs=https://172.33.8.101:2379 isLeader=false
 6565485f164c9da3: name=5f6e37eb65d84199b5f3551959667537 peerURLs=https://172.33.8.102:2380 clientURLs=https://172.33.8.102:2379 isLeader=true
 a0aca39404520794: name=adf5c02dd12a48419d681359438a2740 peerURLs=https://172.33.8.103:2380 clientURLs=https://172.33.8.103:2379 isLeader=false
 
 # ... and so is kubectl :)
-$ [*demo:default*] kubectl get no
+$ [demo:default] kubectl get no
 NAME           STATUS    AGE
 172.33.8.101   Ready     22m
 172.33.8.102   Ready     22m
 172.33.8.103   Ready     22m
 172.33.8.104   Ready     22m
 
-$ [*demo:default*] kubectl get pod --all-namespaces
+$ [demo:default] kubectl get pod --all-namespaces
 NAMESPACE     NAME                                    READY     STATUS    RESTARTS   AGE
 kube-system   kube-dns-v19-r2o5g                      3/3       Running   0          1m
 kube-system   kubernetes-dashboard-2982215621-w1nu4   1/1       Running   0          1m
@@ -172,27 +180,21 @@ You can pass `-n NAMESPACE` and you will be dropped in the selected Kubernetes n
 
 Your old kubecfg will be left intact. In fact every time you enter a shell with `-s` the kubecfg will be enriched with configuration about the cluster and the full path to the project dir will be used as the context and cluster name.
 
-If you just want to generate a kubeconfig file and distribute it, use this:
-```bash
-$ KUBECONFIG=my-kubeconfig ansinetes -p demo -s < /dev/null
-````
-The file `my-kubeconfig` now describes a connection to the `demo` cluster, is self-contained and can be distributed.
-
-While in a shell (`-s`) the `ssh` client is configured with a custom ssh_config file. This lets you ssh to your nodes referring to them by their ansible_hostname (without dealing with IP's, keys and ssh options):
+While in a shell (`-s`) the `ssh` client is configured with a custom `ssh_config` file. This lets you ssh to your nodes referring to them by their Ansible inventory name or IP:
 
 ```bash
 $ ./ansinetes -p demo -s -n web
 Welcome to ansinetes virtual environment "demo"
-$ [*demo:web*] ssh kbt-1
+$ [demo:web] ssh kbt-1
 Container Linux by CoreOS stable (1409.7.0)
 core@kbt-1 ~ $
 
 ```
 
-Finally, for every ansinetes project a separate bash history is maintained. This is a great timesaver when you are dealing with long and complex `kubectl` invocations. Also it may prevent accidents as the history would contain entries valid only in the current project and/or namespace.
+Finally, for every ansinetes project/namespace a separate bash history is maintained. This is a great timesaver when you are dealing with long and complex `kubectl` invocations. Also it may prevent accidents as the history will contain entries valid only for the current project and/or namespace.
 
 # Deployment description
-There is no distinction between "master" nodes and kubelet nodes: you can assing nodes to any node and even can change your mind later. There can be multiple apiservers or schedulers, running on the same node or not. For example the default configuration for Vagrant is listed here:
+There is no distinction between "master" nodes and kubelet nodes: you can assign nodes to any node and even can change your mind later. There can be multiple apiservers or schedulers, running on the same node or not. For example the default configuration is listed here:
 
 ```ini
 [etcd-quorum-members]
@@ -212,15 +214,28 @@ kbt-3
 kbt-4
 kbt-3
 
+[ingress-edges]
+kbt-3
+
 [kubelet]
 kbt-1
 kbt-2
 kbt-3
 kbt-4
+
+[masters]
+kbt-1
+kbt-2
+kbt-3
 ```
+
 A kubelet/proxy runs everywhere while core services are carefully spread accross all 4 nodes. Schedulers and controllers run with `--leader-elect` option. The apiserver also runs in HA mode. On every node a ha-proxy is running that load balances between all the available apiservers. If an apiserver is down the health checks in the ha-proxy will detect it and will not forward requests to it. As a side effect, every node exposes the apiserver API on port 6443 and you can target an arbitrary node with `kubectl`.
 
 All communucations between componentes is secured. There is no plain http communication. The services trust the certificate authority created by the `kt-init-ca` command.
+
+The `masters` group in the inventory is only used when generating the client configuration. It is assumed that only a few nodes will be public even though all of them expose the same interface.
+
+The `ingress-edges` dictates where to deploy the Nginx ingress controllers (using a node selector). You can put the IPs of the nodes in this groups behind a DNS and have a LoadBalancer-like exprience without a cloud provider.
 
 Systemd units are installed uniformly everywhere but are enabled and started only on the designated nodes. If you change the service to node mapping you need to run `kubernetes-bootstrap.yaml` - this will only do the necessary changes and won't restart services needlessly.
 
@@ -228,11 +243,11 @@ Api-server is started with `--authorization-mode=ABAC`. Have a look at the `k8s-
 
 Every component authenticates to the apiserver using a private key under a service account (mapping the CN to the username). The default service account for the kube-system namespace has all privileges.
 
-Additionally an `admin` user is created and is used by `kubectl`. There is also username/password authentication configured for the admin user (for easy Dashboard access) with default password `pass123`. You can change it or add other users to the file `token.csv` before bootstrapping the cluster.
+Additionally an `admin` user is created and is used by `kubectl`. There is also username/password authentication configured for the admin user (for easy Dashboard access) with default password `pass123`. You can change it or add other users to the file `token.csv` during bootstrapping of the cluster.
 
 Only four add-ons are deployed: Dashboard, DNS, Heapster and Registry. The add-ons yaml files may be touched a bit and made to work with ansible.
 
-While not technically an add-on an OpenVPN [service](https://github.com/jvassev/openvpn-k8s) is also deployed by default. During development it is sometimes very useful to make your workstation part of the Kubernetes service network. When you run the playbook `kubernetes-bootstrap.yaml` an openvpn client configuration is re-generated locally. You can then "join" the Kubernetes service and pod network using:
+While not technically an add-on an OpenVPN [service](https://github.com/jvassev/openvpn-k8s) is also deployed by default. During development it is sometimes very useful to make your workstation part of the Kubernetes service network. When you run the playbook `clients.yaml` an openvpn client configuration is re-generated locally. You can then "join" the Kubernetes service and pod network using any openvpn client:
 ```bash
 $ sudo openvpn --script-security 2 --config ovpn-client.conf
 Sun Sep 18 22:40:05 2016 OpenVPN 2.3.7 x86_64-pc-linux-gnu [SSL (OpenSSL)] [LZO] [EPOLL] [PKCS11] [MH] [IPv6] built on Jul  8 2015
@@ -241,7 +256,7 @@ Sun Sep 18 22:40:08 2016 /sbin/ip addr add dev tun0 local 10.241.0.6 peer 10.241
 Sun Sep 18 22:40:08 2016 Initialization Sequence Completed
 ```
 
-The file `ovpn-client.conf` is located in under tmp/ folder in the project. Then, assuming you've established an OpenVPN connection successfully, you should be able to resolve the kube api-server:
+ Then, assuming you've established an OpenVPN connection successfully, you should be able to resolve the kube api-server:
 ```bash
 $ nslookup kubernetes.default 10.254.0.2
 Server:     10.254.0.2
@@ -255,7 +270,6 @@ While the OpenVPN bridge is opened you can target the pod themselves. This is no
 
 OpenVPN client will also use the KubeDNS as your workstation DNS. You will be able to target any service by IP, any pod by it IP and also all services by their DNS name.
 
-For demo purposes an nginx-ingress controller is also run. More nodes can serve as ingress-edges - just add them to the `ingress-edges` group in the `hosts` file.
 
 A docker registry is run in insecure mode. It is accessible at `registry.kube-system.svc:5000`: both from the kubelets and from the pod network. Once connected to the VPN you can push the registry if you add `--insecure-registry registry.kube-system.svc:5000` to you local docker config. This configuration is applied to all kubelet nodes so the same image name can be used in pod specs.
 
@@ -266,8 +280,10 @@ The easiest way to customize the deployment is to edit the `ansible/group_vars/a
 
 The default `all.yaml` file looks like this
 ```yaml
-flannel:
-  network: "25.0.0.0/16"
+flannel_config:
+  Network: "25.0.0.0/16"
+  Backend:
+    Type: udp
 
 kubernetes_cluster_ip_range: "10.254.0.0/16"
 
@@ -277,7 +293,6 @@ kubernetes_service_port_range: "30000-32767"
 
 kubernetes_dns:
   ip: "10.254.0.2"
-  replicas: 2
   domain: "cluster.local"
 
 ovpn:
@@ -288,7 +303,7 @@ ovpn:
 
 datadog:
   enabled: yes
-  tags: "k1=v1,k2=v2"
+  tags: "k1:v1,k2:v2"
   key: the_key
 
 sysdig:
@@ -315,7 +330,7 @@ Run the playbook `ssh-keys-rotate.yaml`. This will prevent ansible from talking 
 # Recommended workflow
 The project directory fully captures the cluster config state including the Ansible scripts and Kubernetes customization. You can keep it under source control. You can later change the playbooks and/or the `hosts` file. The `ansinetes` script is guaranteed to work with somewhat modified project defaults.
 
-I also prefer naming the ansible hosts in order not to deal with IPs. The kubelets assigns a label "ansinetes:{name}" to the nodes for usability. But really, every way is the right way as long as the hosts file contains the required groups.
+I also prefer naming the ansible hosts in order not to deal with IPs. The kubelets assigns a label "ansible_hostname:{name}" to the nodes for usability. But really, every way is the right way as long as the hosts file contains the required groups.
 
 # Why use ansinetes?
 You would find ansinetes useful if you:
@@ -332,7 +347,7 @@ You would find ansinetes useful if you:
 * Is federated Kubernetes supported? Not yet.
 
 # Known issues
-If you lose a node then `ansinetes -s` will produce an invalid config for you. That's because it chooses a random node as the server. Fix it by removing the node that's no longer there.
+Addons may fail to install as download k8s on the nodes may take long time (it has to download about 250MB). The workaround is to `kubectl create -f` the yaml files.
 
 # Resources
 * [Kubernetes from scratch](http://Kubernetes.io/v1.0/docs/getting-started-guides/scratch.html)
