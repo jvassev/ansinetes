@@ -99,8 +99,10 @@ readonly SHORT_NAME=$(basename ${ANSINETES_PROJECT})
 if [[ $START_SHELL == 0 ]]; then
   INTERACTIVE="-ti"
 
+  RUN_FILE_VOLUME=""
   if [[ "$RUN_FILE" != "" ]]; then
     INTERACTIVE=""
+    RUN_FILE_VOLUME="-v ${RUN_FILE}:${RUN_FILE}:ro"
   fi
 
   docker run --rm $INTERACTIVE \
@@ -108,6 +110,7 @@ if [[ $START_SHELL == 0 ]]; then
     -e OUTER_USER=$(id -u) \
     -e RUN_FILE="$RUN_FILE" \
     -e ANSINETES_PROJECT="${ANSINETES_PROJECT}" \
+    ${RUN_FILE_VOLUME} \
     -v ${ANSINETES_PROJECT}/tmp:/tmp/ansible \
     -v ${ANSINETES_PROJECT}:/ansinetes \
     ${ANSINETES_IMAGE}
