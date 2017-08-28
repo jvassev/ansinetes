@@ -4,7 +4,7 @@ log() {
   echo >&2 "$@"
 }
 
-chmod go-rwx /etc/ansible/security/ansible-ssh-key 2&> /dev/null
+chmod go-rwx /ansinetes/security/ansible-ssh-key 2&> /dev/null
 
 if [ "$USER" != "ansinetes" ]; then
   # assume root
