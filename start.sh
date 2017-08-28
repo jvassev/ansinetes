@@ -19,7 +19,8 @@ if [ "$USER" != "ansinetes" ]; then
     ln -s /ansinetes/tmp/ssh_config ~ansinetes/.ssh/config
     exec su ansinetes -l
   else
-    exec su ansinetes $RUN_FILE
+    [ -e /etc/ansible/shell.inc ] && source /etc/ansible/shell.inc
+    exec su ansinetes -p "${RUN_FILE}"
   fi
 fi
 
