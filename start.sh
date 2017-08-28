@@ -4,6 +4,8 @@ log() {
   echo >&2 "$@"
 }
 
+chmod go-rwx /etc/ansible/security/ansible-ssh-key 2&> /dev/null
+
 if [ "$USER" != "ansinetes" ]; then
   # assume root
   adduser --uid $OUTER_USER ansinetes
@@ -20,7 +22,7 @@ if [ "$USER" != "ansinetes" ]; then
     exec su ansinetes -l
   else
     [ -e /etc/ansible/shell.inc ] && source /etc/ansible/shell.inc
-    exec su ansinetes -p "${RUN_FILE}"
+    exec su ansinetes "${RUN_FILE}"
   fi
 fi
 
