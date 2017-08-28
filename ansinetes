@@ -102,6 +102,8 @@ if [[ $START_SHELL == 0 ]]; then
   RUN_FILE_VOLUME=""
   if [[ "$RUN_FILE" != "" ]]; then
     INTERACTIVE=""
+    # TODO fix readlink for mac
+    RUN_FILE="$(readlink -f ${RUN_FILE})"
     RUN_FILE_VOLUME="-v ${RUN_FILE}:${RUN_FILE}:ro"
   fi
 
