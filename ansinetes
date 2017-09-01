@@ -198,7 +198,7 @@ mkdir ${ANSINETES_PROJECT}/tmp -p &> /dev/null || true
 readonly bash_cfg=$(mktemp)
 readonly ssh_cfg=$(mktemp)
 readonly yellow="\[\033[0;33m\]"
-readonly cyan="\[\033[0;36m\]"
+readonly cyan="\[\033[0;32m\]"
 readonly no_color="\[\033[0m\]"
 
 cp ~/.ssh/config $ssh_cfg || true
