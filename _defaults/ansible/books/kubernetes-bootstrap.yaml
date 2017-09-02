@@ -8,22 +8,21 @@
 
   vars:
     addons:
-      - dashboard-controller.yaml
-      - dashboard-service.yaml
+      - dashboard-{{kubernetes_auth_mode}}.yaml
       - kubedns-sa.yaml
       - kubedns-controller.yaml
       - kubedns-svc.yaml
+      - heapster-{{kubernetes_auth_mode}}.yaml
       - heapster-controller.yaml
       - heapster-service.yaml
       - ovpn-secrets.yaml
       - ovpn-controller.yaml
       - ovpn-service.yaml
       - default-backend.yaml
-      - default-backend-service.yaml
       - registry-rc.yaml
       - registry-svc.yaml
       - registry-ds.yaml
-      - nginx-ingress.yaml
+      - nginx-ingress-{{kubernetes_auth_mode}}.yaml
       - datadog.yaml
       - sysdig-daemonset.yaml
 
@@ -103,11 +102,11 @@
         - restart-apiserver
 
     - name: Create apiserver certificate
-      command: "kt-server-cert-create -h {{kubernetes_apiserver_ip}},localhost,172.16.28.1,127.0.0.1 apiserver"
+      command: "kt-server-cert-create -h {{kubernetes_apiserver_ip}},kubernetes.default,localhost,172.16.28.1,127.0.0.1 kubernetes"
       delegate_to: localhost
       when: inventory_hostname == play_hosts[0]
       args:
-        creates: /ansinetes/security/certs/apiserver.pem
+        creates: /ansinetes/security/certs/kubernetes.pem
       become: False
 
     - name: Upload ca file
@@ -115,6 +114,9 @@
       args:
         src: /ansinetes/security/ca.pem
         dest: /etc/kubernetes/ssl/ca.pem
+      notify:
+        - restart-controller-manager
+        - restart-apiserver
 
     - name: Upload apiserver certificates
       copy:
@@ -123,12 +125,32 @@
         dest: /etc/kubernetes/ssl/{{item}}
         owner: root
       with_items:
-        - apiserver.pem
-        - apiserver-key.pem
+        - kubernetes.pem
+        - kubernetes-key.pem
       notify:
         - restart-apiserver
 
-    - name: Create client certificates
+    - name: Create kubelet certificate
+      command: "kt-client-cert-create -O system:nodes kubelet"
+      delegate_to: localhost
+      args:
+        creates: /ansinetes/security/certs/kubelet.pem
+      become: False
+      when: inventory_hostname == play_hosts[0]
+
+    - name: Upload kubelet certificates
+      copy:
+      args:
+        src: /ansinetes/security/certs/{{item}}
+        dest: /etc/kubernetes/ssl/{{item}}
+        owner: root
+      with_items:
+        - kubelet.pem
+        - kubelet-key.pem
+      notify:
+        - restart-apiserver
+
+    - name: Create system component certificates
       command: "kt-client-cert-create {{item}}"
       delegate_to: localhost
       args:
@@ -136,12 +158,38 @@
       become: False
       when: inventory_hostname == play_hosts[0]
       with_items:
-        - proxy
-        - admin
-        - scheduler
-        - controller-manager
-        - kubelet
+        - system:kube-proxy
+        - system:kube-scheduler
+        - system:kube-controller-manager
         - apiserver2kubelet
+
+    - name: Create admin user cert
+      command: "kt-client-cert-create -O system:masters admin"
+      delegate_to: localhost
+      args:
+        creates: /ansinetes/security/certs/admin.pem
+      become: False
+      when: inventory_hostname == play_hosts[0]
+
+    - name: Create service account keys
+      command: "kt-client-cert-create sa"
+      args:
+        creates: /ansinetes/security/certs/sa.pem
+      delegate_to: localhost
+      become: False
+      when: inventory_hostname == play_hosts[0]
+
+    - name: Upload service account keys
+      copy:
+      args:
+        src: /ansinetes/security/certs/{{item}}
+        dest: /etc/kubernetes/ssl/{{item}}
+      with_items:
+        - sa.pem
+        - sa-key.pem
+      notify:
+        - restart-controller-manager
+        - restart-apiserver
 
     - name: Upload kube-proxy client certificates
       copy:
@@ -149,21 +197,10 @@
         src: /ansinetes/security/certs/{{item}}
         dest: /etc/kubernetes/ssl/{{item}}
       with_items:
-        - proxy.pem
-        - proxy-key.pem
+        - system:kube-proxy.pem
+        - system:kube-proxy-key.pem
       notify:
         - restart-proxy
-
-    - name: Upload kubelet client certificates
-      copy:
-      args:
-        src: /ansinetes/security/certs/{{item}}
-        dest: /etc/kubernetes/ssl/{{item}}
-      with_items:
-        - kubelet.pem
-        - kubelet-key.pem
-      notify:
-        - restart-kubelet
 
     - name: Upload apiserver client certificates
       copy:
@@ -182,8 +219,8 @@
         src: /ansinetes/security/certs/{{item}}
         dest: /etc/kubernetes/ssl/{{item}}
       with_items:
-        - scheduler.pem
-        - scheduler-key.pem
+        - system:kube-scheduler.pem
+        - system:kube-scheduler-key.pem
       notify:
         - restart-scheduler
 
@@ -193,8 +230,8 @@
         src: /ansinetes/security/certs/{{item}}
         dest: /etc/kubernetes/ssl/{{item}}
       with_items:
-        - controller-manager.pem
-        - controller-manager-key.pem
+        - system:kube-controller-manager.pem
+        - system:kube-controller-manager-key.pem
       notify:
         - restart-controller-manager
 

@@ -15,5 +15,5 @@ current-context: controller-manager-to-kubernetes
 users:
   - name: controller-manager
     user:
-      client-certificate: /etc/kubernetes/ssl/controller-manager.pem
-      client-key: /etc/kubernetes/ssl/controller-manager-key.pem
+      client-certificate: /etc/kubernetes/ssl/system:kube-controller-manager.pem
+      client-key: /etc/kubernetes/ssl/system:kube-controller-manager-key.pem

@@ -11,14 +11,32 @@ fi
 
 mkdir -p certs || true
 
+ORGS='{"O": "ansinetes"}'
+while [[ $# -gt 1 ]]; do
+  key="$1"
+  case $key in
+    -O|--org)
+      org="$2"
+      ORGS="{\"O\":\"$org\"}"
+      shift
+  ;;
+
+  *)
+  ;;
+  esac
+  shift
+done
+
+echo $ORGS
 NAME=$1
+
 
 if [ -e certs/${NAME}.pem ]; then
   log "certs/${NAME} already exists, will not overwrite it"
   exit 0
 fi
 
-echo '{"CN":"'${NAME}'","hosts":[""],"key":{"algo":"rsa","size":2048}}' | \
+echo '{"CN":"'${NAME}'","hosts":[""],"key":{"algo":"rsa","size":2048},"names":['$ORGS']}' | \
   cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=client - | \
   cfssljson -bare certs/$NAME
 

@@ -8,18 +8,17 @@
 
   vars:
     addons:
-      - dashboard-controller.yaml
-      - dashboard-service.yaml
+      - dashboard-{{kubernetes_auth_mode}}.yaml
       - kubedns-sa.yaml
       - kubedns-controller.yaml
       - kubedns-svc.yaml
+      - heapster-{{kubernetes_auth_mode}}.yaml
       - heapster-controller.yaml
       - heapster-service.yaml
       - ovpn-secrets.yaml
       - ovpn-controller.yaml
       - ovpn-service.yaml
-      - nginx-ingress.yaml
-      - default-backend-service.yaml
+      - nginx-ingress-{{kubernetes_auth_mode}}.yaml
       - default-backend.yaml
       - registry-rc.yaml
       - registry-svc.yaml

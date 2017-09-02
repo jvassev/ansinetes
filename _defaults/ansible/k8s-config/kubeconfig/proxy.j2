@@ -15,5 +15,5 @@ current-context: proxy-to-kubernetes
 users:
   - name: proxy
     user:
-      client-certificate: /etc/kubernetes/ssl/proxy.pem
-      client-key: /etc/kubernetes/ssl/proxy-key.pem
+      client-certificate: /etc/kubernetes/ssl/system:kube-proxy.pem
+      client-key: /etc/kubernetes/ssl/system:kube-proxy-key.pem

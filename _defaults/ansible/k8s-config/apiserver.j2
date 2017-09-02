@@ -32,15 +32,17 @@ KUBE_API_ARGS="\
 --advertise-address=172.16.28.1 \
 --etcd-prefix={{kubernetes_etcd_prefix}} \
 --storage-backend=etcd2 \
---authorization-mode=ABAC \
+--authorization-mode={{kubernetes_auth_mode}} \
+{%if kubernetes_auth_mode == 'ABAC' %}
+--authorization-policy-file=/etc/kubernetes/conf/policy.jsonl \
+{%endif-%}
 --anonymous-auth=false \
 --allow-privileged \
 --service-node-port-range={{kubernetes_service_port_range}} \
---authorization-policy-file=/etc/kubernetes/conf/policy.jsonl \
---tls-cert-file=/etc/kubernetes/ssl/apiserver.pem \
---tls-private-key-file=/etc/kubernetes/ssl/apiserver-key.pem \
+--tls-cert-file=/etc/kubernetes/ssl/kubernetes.pem \
+--tls-private-key-file=/etc/kubernetes/ssl/kubernetes-key.pem \
 --client-ca-file=/etc/kubernetes/ssl/ca.pem \
---service-account-key-file=/etc/kubernetes/ssl/sa.pem \
+--service-account-key-file=/etc/kubernetes/ssl/sa-key.pem \
 --basic-auth-file=/etc/kubernetes/conf/token.csv \
 --kubelet-client-certificate=/etc/kubernetes/ssl/apiserver2kubelet.pem \
 --kubelet-client-key=/etc/kubernetes/ssl/apiserver2kubelet-key.pem \

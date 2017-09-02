@@ -12,6 +12,8 @@ kubernetes_apiserver_ip: "10.254.0.1"
 
 kubernetes_service_port_range: "30000-32767"
 
+kubernetes_auth_mode: RBAC
+
 kubernetes_dns:
   ip: "10.254.0.2"
   domain: "cluster.local"

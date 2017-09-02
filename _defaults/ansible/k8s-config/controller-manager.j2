@@ -10,5 +10,6 @@ KUBE_CONTROLLER_MANAGER_ARGS="\
 --leader-elect \
 --kubeconfig=/etc/kubernetes/conf/controller-manager.config \
 --root-ca-file=/etc/kubernetes/ssl/ca.pem \
+--use-service-account-credentials \
 --service-account-private-key-file=/etc/kubernetes/ssl/sa-key.pem \
 "

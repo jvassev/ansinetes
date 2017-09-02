@@ -15,5 +15,5 @@ current-context: scheduler-to-kubernetes
 users:
   - name: scheduler
     user:
-      client-certificate: /etc/kubernetes/ssl/scheduler.pem
-      client-key: /etc/kubernetes/ssl/scheduler-key.pem
+      client-certificate: /etc/kubernetes/ssl/system:kube-scheduler.pem
+      client-key: /etc/kubernetes/ssl/system:kube-scheduler-key.pem

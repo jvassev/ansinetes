@@ -239,7 +239,7 @@ The `ingress-edges` dictates where to deploy the Nginx ingress controllers (usin
 
 Systemd units are installed uniformly everywhere but are enabled and started only on the designated nodes. If you change the service to node mapping you need to run `kubernetes-bootstrap.yaml` - this will only do the necessary changes and won't restart services needlessly.
 
-Api-server is started with `--authorization-mode=ABAC`. Have a look at the `k8s-config/policy.jsonl` file for details.
+Depending on the `kubernetes_auth_mode` setting either ABAC or RBAC is used. If ABAC is used (`--authorization-mode=ABAC`) then the `k8s-config/policy.jsonl` is applied as a policy.
 
 Every component authenticates to the apiserver using a private key under a service account (mapping the CN to the username). The default service account for the kube-system namespace has all privileges.
 
@@ -290,6 +290,8 @@ kubernetes_cluster_ip_range: "10.254.0.0/16"
 kubernetes_apiserver_ip: "10.254.0.1"
 
 kubernetes_service_port_range: "30000-32767"
+
+kubernetes_auth_mode: RBAC
 
 kubernetes_dns:
   ip: "10.254.0.2"
