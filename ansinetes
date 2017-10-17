@@ -218,6 +218,7 @@ source <(kubectl completion bash)
 
 source <(helm completion bash)
 
+[ -f ${ANSINETES_PROJECT}/env.inc ] && source ${ANSINETES_PROJECT}/env.inc
 alias ssh="ssh -F ${ssh_cfg}"
 export HISTFILE=${ANSINETES_PROJECT}/tmp/${DEFAULT_NS}-hist
 echo Welcome to ansinetes virtual environment \"${ANSINETES_PROJECT}\"
